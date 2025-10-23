@@ -57,7 +57,7 @@ export const SettingsScreen = ({ onClose }: SettingsScreenProps) => {
         {/* Title Image - Half outside box at top */}
         <div className="absolute -top-20 left-1/2 transform -translate-x-1/2 z-10">
           <img 
-            src="/PNG/settings/Settings topic_center.png" 
+            src="/PNG/settings/settings-header.png" 
             alt="Settings" 
             className="h-40 w-auto drop-shadow-2xl"
             style={{ transform: 'scaleX(1.15)' }}
@@ -120,7 +120,7 @@ export const SettingsScreen = ({ onClose }: SettingsScreenProps) => {
                     disabled={musicVolume === 0}
                   >
                     <img 
-                      src="/PNG/settings/voluem -.png" 
+                      src="/PNG/settings/volume-minus.png" 
                       alt="Volume Down" 
                       className="w-10 h-10 drop-shadow-md"
                       style={{ opacity: musicVolume === 0 ? 0.3 : 1 }}
@@ -150,7 +150,7 @@ export const SettingsScreen = ({ onClose }: SettingsScreenProps) => {
                     disabled={musicVolume === 10}
                   >
                     <img 
-                      src="/PNG/settings/voluem +.png" 
+                      src="/PNG/settings/volume-plus.png" 
                       alt="Volume Up" 
                       className="w-10 h-10 drop-shadow-md"
                       style={{ opacity: musicVolume === 10 ? 0.3 : 1 }}
@@ -187,7 +187,7 @@ export const SettingsScreen = ({ onClose }: SettingsScreenProps) => {
                     disabled={sfxVolume === 0}
                   >
                     <img 
-                      src="/PNG/settings/voluem -.png" 
+                      src="/PNG/settings/volume-minus.png" 
                       alt="Volume Down" 
                       className="w-10 h-10 drop-shadow-md"
                       style={{ opacity: sfxVolume === 0 ? 0.3 : 1 }}
@@ -217,7 +217,7 @@ export const SettingsScreen = ({ onClose }: SettingsScreenProps) => {
                     disabled={sfxVolume === 10}
                   >
                     <img 
-                      src="/PNG/settings/voluem +.png" 
+                      src="/PNG/settings/volume-plus.png" 
                       alt="Volume Up" 
                       className="w-10 h-10 drop-shadow-md"
                       style={{ opacity: sfxVolume === 10 ? 0.3 : 1 }}

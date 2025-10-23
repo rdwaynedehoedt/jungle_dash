@@ -1,55 +1,141 @@
 /**
- * SOURCE: Custom implementation with minimalist icon-based UI
- * PURPOSE: Clean login with icons and tooltips - minimal text approach
- * MODIFICATIONS: Icon-only buttons with smooth hover tooltips, settings and info buttons
+ * SOURCE: Custom implementation with react-hot-toast notifications
+ * PURPOSE: Clean login with icons, tooltips, and proper validation alerts
+ * MODIFICATIONS: Icon-only buttons with toast notifications for errors
  */
 
 import { useState } from 'react';
+import toast from 'react-hot-toast';
 import { useAuthStore } from '../state/useAuthStore';
 
 export const LoginScreen = () => {
+  const [mode, setMode] = useState<'login' | 'signup'>('login');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const { setUsername: saveUsername } = useAuthStore();
 
-  const handleManualLogin = () => {
-    // Validation
-    if (!username.trim()) {
-      setError('Enter username');
-      return;
+  const validateUsername = (username: string) => {
+    if (!username) {
+      toast.error('Enter username');
+      return false;
     }
     
-    if (username.trim().length < 3) {
-      setError('Username too short');
-      return;
+    if (username.length < 3) {
+      toast.error('Username too short (min 3)');
+      return false;
     }
     
-    if (username.trim().length > 15) {
-      setError('Username too long');
+    if (username.length > 15) {
+      toast.error('Username too long (max 15)');
+      return false;
+    }
+
+    const validUsername = /^[a-zA-Z0-9_-]+$/;
+    if (!validUsername.test(username)) {
+      toast.error('Invalid characters');
+      return false;
+    }
+
+    return true;
+  };
+
+  const validatePassword = (password: string) => {
+    if (mode === 'signup' && !password) {
+      toast.error('Enter password');
+      return false;
+    }
+
+    if (mode === 'signup' && password.length < 6) {
+      toast.error('Password too short (min 6)');
+      return false;
+    }
+
+    return true;
+  };
+
+  const handleLogin = () => {
+    const trimmedUsername = username.trim();
+    
+    if (!validateUsername(trimmedUsername)) return;
+
+    // Check if user exists in localStorage
+    const users = JSON.parse(localStorage.getItem('jungle_dash_users') || '{}');
+    
+    if (!users[trimmedUsername]) {
+      toast.error('User not found');
       return;
     }
 
-    // Save username (password is optional for now)
-    saveUsername(username.trim());
+    // For login, password is optional for now
+    toast.success(`Welcome, ${trimmedUsername}!`);
+    saveUsername(trimmedUsername);
+  };
+
+  const handleSignup = () => {
+    const trimmedUsername = username.trim();
+    
+    if (!validateUsername(trimmedUsername)) return;
+    if (!validatePassword(password)) return;
+
+    // Check password confirmation
+    if (password !== confirmPassword) {
+      toast.error('Passwords don\'t match');
+      return;
+    }
+
+    // Check if user already exists
+    const users = JSON.parse(localStorage.getItem('jungle_dash_users') || '{}');
+    
+    if (users[trimmedUsername]) {
+      toast.error('Username taken');
+      return;
+    }
+
+    // Save new user
+    users[trimmedUsername] = { password, createdAt: new Date().toISOString() };
+    localStorage.setItem('jungle_dash_users', JSON.stringify(users));
+
+    toast.success(`Welcome, ${trimmedUsername}!`);
+    saveUsername(trimmedUsername);
+  };
+
+  const handleSubmit = () => {
+    if (mode === 'login') {
+      handleLogin();
+    } else {
+      handleSignup();
+    }
   };
 
   const handleGoogleLogin = () => {
-    alert('Google login coming soon!');
+    toast('Coming soon', {
+      duration: 2000,
+    });
   };
 
   const handleSettings = () => {
-    alert('Settings coming soon!');
+    toast('Coming soon', {
+      duration: 2000,
+    });
   };
 
   const handleInfo = () => {
-    alert('Game Info: Jungle Dash - An endless runner adventure!');
+    toast('Jungle Dash', {
+      duration: 2000,
+    });
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
-      handleManualLogin();
+      handleSubmit();
     }
+  };
+
+  const switchMode = () => {
+    setMode(mode === 'login' ? 'signup' : 'login');
+    setPassword('');
+    setConfirmPassword('');
   };
 
   return (
@@ -118,12 +204,40 @@ export const LoginScreen = () => {
           <div className="relative px-14 py-16">
             
             {/* Logo at top inside box */}
-            <div className="flex justify-center mb-10">
+            <div className="flex justify-center mb-8">
               <img 
                 src="/PNG/menu/logo.png" 
                 alt="Jungle Dash" 
-                className="w-72 h-auto drop-shadow-2xl transform hover:scale-105 transition-transform duration-300"
+                className="w-64 h-auto drop-shadow-2xl transform hover:scale-105 transition-transform duration-300"
               />
+            </div>
+
+            {/* Login/Signup Toggle - Minimal icons */}
+            <div className="flex justify-center gap-4 mb-6">
+              <button
+                onClick={() => setMode('login')}
+                className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-200 ${
+                  mode === 'login'
+                    ? 'bg-green-500 text-white shadow-lg scale-110'
+                    : 'bg-white/60 text-gray-500 hover:bg-white/90'
+                }`}
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                </svg>
+              </button>
+              <button
+                onClick={() => setMode('signup')}
+                className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-200 ${
+                  mode === 'signup'
+                    ? 'bg-green-500 text-white shadow-lg scale-110'
+                    : 'bg-white/60 text-gray-500 hover:bg-white/90'
+                }`}
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                </svg>
+              </button>
             </div>
 
             {/* Username Input with icon */}
@@ -138,12 +252,9 @@ export const LoginScreen = () => {
                   id="username"
                   type="text"
                   value={username}
-                  onChange={(e) => {
-                    setUsername(e.target.value);
-                    setError('');
-                  }}
+                  onChange={(e) => setUsername(e.target.value)}
                   onKeyPress={handleKeyPress}
-                  placeholder="username"
+                  placeholder={mode === 'login' ? 'username' : 'new username'}
                   className="flex-1 px-4 py-4 text-base rounded-xl bg-transparent text-gray-800 placeholder-gray-400 outline-none"
                   maxLength={15}
                 />
@@ -151,31 +262,53 @@ export const LoginScreen = () => {
             </div>
 
             {/* Password Input with icon */}
-            <div className="mb-8">
-              <div className="flex items-center bg-white rounded-xl border-2 border-gray-300 focus-within:border-green-500 focus-within:ring-2 focus-within:ring-green-200 transition-all shadow-md">
-                <div className="pl-4 text-gray-400">
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                  </svg>
+            {mode === 'signup' && (
+              <div className="mb-5">
+                <div className="flex items-center bg-white rounded-xl border-2 border-gray-300 focus-within:border-green-500 focus-within:ring-2 focus-within:ring-green-200 transition-all shadow-md">
+                  <div className="pl-4 text-gray-400">
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                  </div>
+                  <input
+                    id="password"
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    onKeyPress={handleKeyPress}
+                    placeholder="password"
+                    className="flex-1 px-4 py-4 text-base rounded-xl bg-transparent text-gray-800 placeholder-gray-400 outline-none"
+                  />
                 </div>
-                <input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  onKeyPress={handleKeyPress}
-                  placeholder="password (optional)"
-                  className="flex-1 px-4 py-4 text-base rounded-xl bg-transparent text-gray-800 placeholder-gray-400 outline-none"
-                />
               </div>
-            </div>
-
-            {/* Error message */}
-            {error && (
-              <p className="text-sm text-red-600 mb-6 text-center">
-                {error}
-              </p>
             )}
+
+            {/* Confirm Password Input - Only for signup */}
+            {mode === 'signup' && (
+              <div className="mb-8">
+                <div className="flex items-center bg-white rounded-xl border-2 border-gray-300 focus-within:border-green-500 focus-within:ring-2 focus-within:ring-green-200 transition-all shadow-md">
+                  <div className="pl-4 text-gray-400">
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <input
+                    id="confirmPassword"
+                    type="password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    onKeyPress={handleKeyPress}
+                    placeholder="confirm password"
+                    className="flex-1 px-4 py-4 text-base rounded-xl bg-transparent text-gray-800 placeholder-gray-400 outline-none"
+                  />
+                </div>
+              </div>
+            )}
+
+            {mode === 'login' && (
+              <div className="mb-8"></div>
+            )}
+
 
             {/* Icon Buttons Row */}
             <div className="flex items-center justify-center gap-6 mt-4">
@@ -215,7 +348,7 @@ export const LoginScreen = () => {
               {/* Continue/OK Button */}
               <div className="relative group">
                 <button
-                  onClick={handleManualLogin}
+                  onClick={handleSubmit}
                   className="transform hover:scale-110 active:scale-95 transition-transform duration-200"
                 >
                   <img 
@@ -226,11 +359,12 @@ export const LoginScreen = () => {
                 </button>
                 {/* Tooltip */}
                 <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-3 py-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap shadow-lg">
-                  Continue
+                  {mode === 'login' ? 'Login' : 'Sign Up'}
                 </div>
               </div>
 
             </div>
+
 
           </div>
         </div>

@@ -44,7 +44,6 @@ export const StartScreen = () => {
             <p className="text-2xl font-bold text-center text-gray-800">
               <span className="text-gray-700">Welcome, </span>
               <span className="text-green-600">{username}</span>
-              <span className="text-2xl ml-2">🎉</span>
             </p>
           </div>
         </div>
@@ -58,9 +57,9 @@ export const StartScreen = () => {
           />
         </button>
 
-        {/* Coming Soon Badge - Cute and bigger */}
+        {/* Coming Soon Badge - Clean and bigger */}
         <div className="bg-yellow-400 border-2 border-yellow-500 text-yellow-900 font-bold px-8 py-3 rounded-full shadow-lg text-lg">
-          <span>🎮 Game Coming Soon 🎮</span>
+          Game Coming Soon
         </div>
 
         {/* Logout Button - Clean and bigger */}

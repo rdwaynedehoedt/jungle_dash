@@ -1,7 +1,7 @@
 /**
  * SOURCE: Custom implementation with minimalist icon-based UI
  * PURPOSE: Clean login with icons and tooltips - minimal text approach
- * MODIFICATIONS: Icon-only buttons with smooth hover tooltips
+ * MODIFICATIONS: Icon-only buttons with smooth hover tooltips, settings and info buttons
  */
 
 import { useState } from 'react';
@@ -38,6 +38,14 @@ export const LoginScreen = () => {
     alert('Google login coming soon!');
   };
 
+  const handleSettings = () => {
+    alert('Settings coming soon!');
+  };
+
+  const handleInfo = () => {
+    alert('Game Info: Jungle Dash - An endless runner adventure!');
+  };
+
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       handleManualLogin();
@@ -55,20 +63,48 @@ export const LoginScreen = () => {
       {/* Dark overlay */}
       <div className="absolute inset-0 bg-black/40" />
       
-      {/* Content Container */}
-      <div className="relative z-10 min-h-screen flex flex-col items-center justify-center px-4 py-12">
-        
-        {/* Logo - Bigger and more prominent */}
-        <div className="transform hover:scale-105 transition-transform duration-300 mb-8">
-          <img 
-            src="/PNG/menu/logo.png" 
-            alt="Jungle Dash" 
-            className="w-80 h-auto drop-shadow-2xl"
-          />
+      {/* Top Corner Buttons */}
+      <div className="absolute top-4 left-4 right-4 z-20 flex justify-between">
+        {/* Settings Button */}
+        <div className="relative group">
+          <button
+            onClick={handleSettings}
+            className="transform hover:scale-110 active:scale-95 transition-transform duration-200"
+          >
+            <img 
+              src="/PNG/btn/settings.png" 
+              alt="Settings" 
+              className="w-12 h-12 drop-shadow-lg"
+            />
+          </button>
+          <div className="absolute top-14 left-0 bg-gray-800 text-white text-xs px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap shadow-lg">
+            Settings
+          </div>
         </div>
 
-        {/* Wooden Box Login Container - Bigger and more spacious */}
-        <div className="w-full max-w-md relative">
+        {/* Info Button */}
+        <div className="relative group">
+          <button
+            onClick={handleInfo}
+            className="transform hover:scale-110 active:scale-95 transition-transform duration-200"
+          >
+            <img 
+              src="/PNG/btn/about.png" 
+              alt="Info" 
+              className="w-12 h-12 drop-shadow-lg"
+            />
+          </button>
+          <div className="absolute top-14 right-0 bg-gray-800 text-white text-xs px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap shadow-lg">
+            Info
+          </div>
+        </div>
+      </div>
+      
+      {/* Content Container */}
+      <div className="relative z-10 min-h-screen flex items-center justify-center px-4 py-8">
+
+        {/* Wooden Box Login Container - Bigger and eye-catching */}
+        <div className="w-full max-w-lg relative">
           {/* Wooden Board Background */}
           <div 
             className="absolute inset-0 bg-contain bg-center bg-no-repeat"
@@ -78,17 +114,21 @@ export const LoginScreen = () => {
             }}
           />
           
-          {/* Content on wooden board - More padding and spacing */}
-          <div className="relative px-12 py-12">
+          {/* Content on wooden board */}
+          <div className="relative px-14 py-16">
             
-            {/* Cute emoji decoration at top */}
-            <div className="text-center mb-6">
-              <span className="text-4xl">🌴</span>
+            {/* Logo at top inside box */}
+            <div className="flex justify-center mb-10">
+              <img 
+                src="/PNG/menu/logo.png" 
+                alt="Jungle Dash" 
+                className="w-72 h-auto drop-shadow-2xl transform hover:scale-105 transition-transform duration-300"
+              />
             </div>
 
-            {/* Username Input with icon - Bigger */}
-            <div className="mb-5">
-              <div className="flex items-center bg-white rounded-xl border-2 border-gray-300 focus-within:border-green-500 focus-within:ring-2 focus-within:ring-green-200 transition-all shadow-sm">
+            {/* Username Input with icon */}
+            <div className="mb-6">
+              <div className="flex items-center bg-white rounded-xl border-2 border-gray-300 focus-within:border-green-500 focus-within:ring-2 focus-within:ring-green-200 transition-all shadow-md">
                 <div className="pl-4 text-gray-400">
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -104,15 +144,15 @@ export const LoginScreen = () => {
                   }}
                   onKeyPress={handleKeyPress}
                   placeholder="username"
-                  className="flex-1 px-4 py-3.5 text-base rounded-xl bg-transparent text-gray-800 placeholder-gray-400 outline-none"
+                  className="flex-1 px-4 py-4 text-base rounded-xl bg-transparent text-gray-800 placeholder-gray-400 outline-none"
                   maxLength={15}
                 />
               </div>
             </div>
 
-            {/* Password Input with icon - Bigger */}
-            <div className="mb-6">
-              <div className="flex items-center bg-white rounded-xl border-2 border-gray-300 focus-within:border-green-500 focus-within:ring-2 focus-within:ring-green-200 transition-all shadow-sm">
+            {/* Password Input with icon */}
+            <div className="mb-8">
+              <div className="flex items-center bg-white rounded-xl border-2 border-gray-300 focus-within:border-green-500 focus-within:ring-2 focus-within:ring-green-200 transition-all shadow-md">
                 <div className="pl-4 text-gray-400">
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
@@ -125,53 +165,54 @@ export const LoginScreen = () => {
                   onChange={(e) => setPassword(e.target.value)}
                   onKeyPress={handleKeyPress}
                   placeholder="password (optional)"
-                  className="flex-1 px-4 py-3.5 text-base rounded-xl bg-transparent text-gray-800 placeholder-gray-400 outline-none"
+                  className="flex-1 px-4 py-4 text-base rounded-xl bg-transparent text-gray-800 placeholder-gray-400 outline-none"
                 />
               </div>
             </div>
 
             {/* Error message */}
             {error && (
-              <p className="text-sm text-red-600 mb-4 text-center">
+              <p className="text-sm text-red-600 mb-6 text-center">
                 {error}
               </p>
             )}
 
-            {/* Icon Buttons Row - Bigger with more spacing */}
-            <div className="flex items-center justify-center gap-6 mt-8">
+            {/* Icon Buttons Row */}
+            <div className="flex items-center justify-center gap-6 mt-4">
               
-              {/* Google Login Icon Button - Bigger */}
+              {/* Google Login Button - 01 with white box and G on top */}
               <div className="relative group">
                 <button
                   onClick={handleGoogleLogin}
-                  className="w-16 h-16 bg-white rounded-full shadow-lg hover:shadow-xl flex items-center justify-center transition-all duration-200 hover:scale-110 active:scale-95 border-2 border-gray-100"
+                  className="relative transform hover:scale-110 active:scale-95 transition-transform duration-200"
                 >
-                  <svg className="w-8 h-8" viewBox="0 0 24 24">
-                    <path
-                      fill="#4285F4"
-                      d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                    />
-                    <path
-                      fill="#34A853"
-                      d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                    />
-                    <path
-                      fill="#FBBC05"
-                      d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                    />
-                    <path
-                      fill="#EA4335"
-                      d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                    />
-                  </svg>
+                  {/* 01.png background frame */}
+                  <img 
+                    src="/PNG/btn/01.png" 
+                    alt="Google Login" 
+                    className="w-16 h-16 drop-shadow-xl"
+                  />
+                  {/* White box/circle to cover green part */}
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="w-11 h-11 bg-white rounded-xl"></div>
+                  </div>
+                  {/* Google G overlaid on top of white box */}
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <svg className="w-9 h-9" viewBox="0 0 48 48">
+                      <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+                      <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+                      <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+                      <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+                    </svg>
+                  </div>
                 </button>
                 {/* Tooltip */}
-                <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap shadow-lg">
+                <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-3 py-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap shadow-lg">
                   Google Login
                 </div>
               </div>
 
-              {/* Continue/OK Button - Bigger */}
+              {/* Continue/OK Button */}
               <div className="relative group">
                 <button
                   onClick={handleManualLogin}
@@ -184,16 +225,11 @@ export const LoginScreen = () => {
                   />
                 </button>
                 {/* Tooltip */}
-                <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap shadow-lg">
+                <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-3 py-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap shadow-lg">
                   Continue
                 </div>
               </div>
 
-            </div>
-
-            {/* Cute emoji decoration at bottom */}
-            <div className="text-center mt-6">
-              <span className="text-2xl">🎮</span>
             </div>
 
           </div>
@@ -202,4 +238,3 @@ export const LoginScreen = () => {
     </div>
   );
 };
-

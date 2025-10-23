@@ -4,72 +4,146 @@
  * MODIFICATIONS: Cartoon/game style with wooden elements to match login
  */
 
+import { useState } from 'react';
 import { useAuthStore } from '../state/useAuthStore';
+import { SettingsScreen } from './SettingsScreen';
 
 export const StartScreen = () => {
   const { username, logout } = useAuthStore();
+  const [showSettings, setShowSettings] = useState(false);
 
   return (
     <div className="min-h-screen w-full relative overflow-hidden">
-      {/* Jungle Background */}
-      <div 
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: 'url(/PNG/menu/bg.png)' }}
-      />
-      
-      {/* Dark overlay */}
-      <div className="absolute inset-0 bg-black/40" />
+      {/* Jungle Video Background */}
+      <video
+        autoPlay
+        loop
+        muted
+        playsInline
+        className="absolute inset-0 w-full h-full object-cover"
+        style={{ 
+          objectFit: 'cover',
+          objectPosition: 'center',
+          transform: 'scale(1.18)',
+          width: '100%',
+          height: '100%'
+        }}
+      >
+        <source src="/PNG/menu/Stylized_Jungle_Game_Background_Animation.mp4" type="video/mp4" />
+      </video>
       
       {/* Content */}
-      <div className="relative z-10 min-h-screen flex flex-col items-center justify-center px-4 gap-10">
+      <div className="relative z-10 min-h-screen flex flex-col items-center justify-between px-4 py-8">
         
-        {/* Logo - Bigger */}
-        <div className="transform hover:scale-105 transition-transform duration-300">
-          <img 
-            src="/PNG/menu/logo.png" 
-            alt="Jungle Dash" 
-            className="w-96 h-auto drop-shadow-2xl"
-          />
-        </div>
+        {/* Top Section - Logo and Welcome */}
+        <div className="flex flex-col items-center gap-6 mt-8">
+          {/* Logo */}
+          <div className="transform hover:scale-105 transition-transform duration-300">
+            <img 
+              src="/PNG/menu/logo.png" 
+              alt="Jungle Dash" 
+              className="w-80 h-auto drop-shadow-2xl"
+            />
+          </div>
 
-        {/* Welcome Banner - Bigger on wooden board */}
-        <div className="relative">
-          <div 
-            className="bg-contain bg-center bg-no-repeat px-20 py-8"
-            style={{ 
-              backgroundImage: 'url(/PNG/menu/bgloginbox.png)',
-              backgroundSize: '100% 100%'
-            }}
-          >
-            <p className="text-2xl font-bold text-center text-gray-800">
-              <span className="text-gray-700">Welcome, </span>
-              <span className="text-green-600">{username}</span>
-            </p>
+          {/* Welcome Banner */}
+          <div className="relative">
+            <div 
+              className="bg-contain bg-center bg-no-repeat px-16 py-6"
+              style={{ 
+                backgroundImage: 'url(/PNG/menu/bgloginbox.png)',
+                backgroundSize: '100% 100%'
+              }}
+            >
+              <p className="text-xl font-bold text-center text-gray-800 whitespace-nowrap">
+                Welcome, {username}!
+              </p>
+            </div>
           </div>
         </div>
 
-        {/* Play Button - Bigger */}
-        <button className="transform hover:scale-110 active:scale-95 transition-transform duration-200 drop-shadow-2xl">
-          <img 
-            src="/PNG/menu/play.png" 
-            alt="Play" 
-            className="w-56 h-auto"
-          />
-        </button>
-
-        {/* Coming Soon Badge - Clean and bigger */}
-        <div className="bg-yellow-400 border-2 border-yellow-500 text-yellow-900 font-bold px-8 py-3 rounded-full shadow-lg text-lg">
-          Game Coming Soon
+        {/* Center Section - Main Play Button */}
+        <div className="flex flex-col items-center">
+          {/* Play Button */}
+          <button className="transform hover:scale-110 active:scale-95 transition-transform duration-200 drop-shadow-2xl">
+            <img 
+              src="/PNG/menu/play.png" 
+              alt="Play" 
+              className="w-56 h-auto"
+            />
+          </button>
         </div>
 
-        {/* Logout Button - Clean and bigger */}
-        <button
-          onClick={logout}
-          className="mt-4 bg-white/90 hover:bg-white text-gray-700 font-semibold px-8 py-3 rounded-xl transition-all duration-200 shadow-md hover:shadow-lg hover:scale-105 active:scale-95"
-        >
-          Logout
-        </button>
+        {/* Bottom Section - Navigation Icons */}
+        <div className="flex items-center justify-center gap-6 mb-8">
+          
+          {/* Shop */}
+          <div className="relative group">
+            <button className="transform hover:scale-110 active:scale-95 transition-transform duration-200">
+              <img 
+                src="/PNG/btn/shop.png" 
+                alt="Shop" 
+                className="w-16 h-16 drop-shadow-xl"
+              />
+            </button>
+            <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap shadow-lg">
+              Shop
+            </div>
+          </div>
+
+          {/* Settings */}
+          <div className="relative group">
+            <button 
+              onClick={() => setShowSettings(true)}
+              className="transform hover:scale-110 active:scale-95 transition-transform duration-200"
+            >
+              <img 
+                src="/PNG/btn/settings.png" 
+                alt="Settings" 
+                className="w-16 h-16 drop-shadow-xl"
+              />
+            </button>
+            <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap shadow-lg">
+              Settings
+            </div>
+          </div>
+
+          {/* Profile */}
+          <div className="relative group">
+            <button className="transform hover:scale-110 active:scale-95 transition-transform duration-200">
+              <img 
+                src="/PNG/btn/leader.png" 
+                alt="Profile" 
+                className="w-16 h-16 drop-shadow-xl"
+              />
+            </button>
+            <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap shadow-lg">
+              My Profile
+            </div>
+          </div>
+
+          {/* Logout */}
+          <div className="relative group">
+            <button
+              onClick={logout}
+              className="transform hover:scale-110 active:scale-95 transition-transform duration-200"
+            >
+              <div className="w-16 h-16 bg-red-500 rounded-full flex items-center justify-center border-4 border-white shadow-xl">
+                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+              </div>
+            </button>
+            <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap shadow-lg">
+              Logout
+            </div>
+          </div>
+
+        </div>
       </div>
+
+      {/* Settings Modal */}
+      {showSettings && <SettingsScreen onClose={() => setShowSettings(false)} />}
     </div>
   );
 };

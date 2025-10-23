@@ -10,11 +10,11 @@ import { useAuthStore } from '../state/useAuthStore';
 
 export const LoginScreen = () => {
   const [mode, setMode] = useState<'login' | 'signup'>('login');
+  const [step, setStep] = useState<'form' | 'verify'>('form');
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [showPinModal, setShowPinModal] = useState(false);
   const [verificationCode, setVerificationCode] = useState('');
   const [enteredPin, setEnteredPin] = useState('');
   const [pendingUserData, setPendingUserData] = useState<{username: string; email: string; password: string} | null>(null);
@@ -139,10 +139,11 @@ export const LoginScreen = () => {
     });
 
     // Show code in toast for testing (later will be sent via email)
-    toast.success(`Verification code: ${code}`, { duration: 10000 });
+    toast.success(`Code sent to ${trimmedEmail}`, { duration: 4000 });
+    toast.success(`Code: ${code}`, { duration: 10000 });
     
-    // Open PIN modal
-    setShowPinModal(true);
+    // Switch to verification step
+    setStep('verify');
     setEnteredPin('');
   };
 
@@ -171,8 +172,8 @@ export const LoginScreen = () => {
       toast.success(`Welcome, ${pendingUserData.username}!`);
       saveUsername(pendingUserData.username);
       
-      // Close modal and reset
-      setShowPinModal(false);
+      // Reset everything
+      setStep('form');
       setPendingUserData(null);
       setVerificationCode('');
       setEnteredPin('');
@@ -184,11 +185,14 @@ export const LoginScreen = () => {
     const code = Math.floor(10000000 + Math.random() * 90000000).toString();
     setVerificationCode(code);
     setEnteredPin('');
-    toast.success(`New code: ${code}`, { duration: 10000 });
+    if (pendingUserData?.email) {
+      toast.success(`Code sent to ${pendingUserData.email}`, { duration: 4000 });
+    }
+    toast.success(`Code: ${code}`, { duration: 10000 });
   };
 
-  const handleClosePinModal = () => {
-    setShowPinModal(false);
+  const handleBackToForm = () => {
+    setStep('form');
     setPendingUserData(null);
     setVerificationCode('');
     setEnteredPin('');
@@ -228,14 +232,23 @@ export const LoginScreen = () => {
 
   return (
     <div className="min-h-screen w-full relative overflow-hidden">
-      {/* Jungle Background */}
-      <div 
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: 'url(/PNG/menu/bg.png)' }}
-      />
-      
-      {/* Dark overlay */}
-      <div className="absolute inset-0 bg-black/40" />
+      {/* Jungle Video Background */}
+      <video
+        autoPlay
+        loop
+        muted
+        playsInline
+        className="absolute inset-0 w-full h-full object-cover"
+        style={{ 
+          objectFit: 'cover',
+          objectPosition: 'center',
+          transform: 'scale(1.18)',
+          width: '100%',
+          height: '100%'
+        }}
+      >
+        <source src="/PNG/menu/Stylized_Jungle_Game_Background_Animation.mp4" type="video/mp4" />
+      </video>
       
       {/* Top Corner Buttons */}
       <div className="absolute top-4 left-4 right-4 z-20 flex justify-between">
@@ -291,6 +304,112 @@ export const LoginScreen = () => {
           {/* Content on wooden board */}
           <div className="relative px-14 py-16">
             
+            {/* Show verification form or login/signup form */}
+            {step === 'verify' ? (
+              // VERIFICATION FORM
+              <div className="space-y-6">
+                {/* Title */}
+                <div className="text-center mb-8">
+                  <h2 className="text-5xl font-black whitespace-nowrap" style={{ 
+                    fontFamily: '"Fredoka One", "Lilita One", "Baloo 2", "Bubblegum Sans", Rounded, cursive, sans-serif',
+                    color: '#4A972C',
+                    WebkitTextStroke: '0.5px white',
+                    textShadow: '3px 3px 0px rgba(0,0,0,0.15)',
+                    letterSpacing: '1px',
+                    fontWeight: '900'
+                  }}>
+                    Verify Email
+                  </h2>
+                </div>
+
+                {/* PIN Input */}
+                <div>
+                  <div className="flex items-center bg-white rounded-xl border-2 border-gray-300 focus-within:border-green-500 focus-within:ring-2 focus-within:ring-green-200 transition-all shadow-md">
+                    <div className="pl-4 text-gray-400">
+                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                      </svg>
+                    </div>
+                    <input
+                      id="pin"
+                      type="text"
+                      value={enteredPin}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/\D/g, '');
+                        if (val.length <= 8) {
+                          setEnteredPin(val);
+                        }
+                      }}
+                      onKeyPress={(e) => {
+                        if (e.key === 'Enter') {
+                          handleVerifyPin();
+                        }
+                      }}
+                      placeholder="8-digit code"
+                      className="flex-1 px-4 py-4 text-base rounded-xl bg-transparent text-gray-800 placeholder-gray-400 outline-none tracking-widest font-mono"
+                      maxLength={8}
+                      autoFocus
+                    />
+                  </div>
+                </div>
+
+                {/* Buttons Row */}
+                <div className="flex items-center justify-center gap-4 mt-6">
+                  {/* Back Button */}
+                  <div className="relative group">
+                    <button
+                      onClick={handleBackToForm}
+                      className="transform hover:scale-110 active:scale-95 transition-transform duration-200"
+                    >
+                      <img 
+                        src="/PNG/btn/prew.png" 
+                        alt="Back" 
+                        className="w-16 h-16 drop-shadow-xl"
+                      />
+                    </button>
+                    <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap shadow-lg">
+                      Back
+                    </div>
+                  </div>
+
+                  {/* Resend Button */}
+                  <div className="relative group">
+                    <button
+                      onClick={handleResendCode}
+                      className="transform hover:scale-110 active:scale-95 transition-transform duration-200"
+                    >
+                      <img 
+                        src="/PNG/btn/restart.png" 
+                        alt="Resend" 
+                        className="w-16 h-16 drop-shadow-xl"
+                      />
+                    </button>
+                    <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap shadow-lg">
+                      Resend
+                    </div>
+                  </div>
+
+                  {/* Verify Button */}
+                  <div className="relative group">
+                    <button
+                      onClick={handleVerifyPin}
+                      className="transform hover:scale-110 active:scale-95 transition-transform duration-200"
+                    >
+                      <img 
+                        src="/PNG/btn/next.png" 
+                        alt="Verify" 
+                        className="w-16 h-16 drop-shadow-xl"
+                      />
+                    </button>
+                    <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap shadow-lg">
+                      Verify
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              // LOGIN/SIGNUP FORM
+              <>
             {/* Logo at top inside box */}
             <div className="flex justify-center mb-8">
               <img 
@@ -306,13 +425,15 @@ export const LoginScreen = () => {
                 <button
                   onClick={() => {
                     setMode('login');
+                    setStep('form');
+                    setEmail('');
                     setPassword('');
                     setConfirmPassword('');
                   }}
                   className={`relative z-10 w-24 py-2 rounded-full flex items-center justify-center gap-2 transition-all duration-300 ${
                     mode === 'login'
-                      ? 'text-white font-semibold'
-                      : 'text-gray-800 hover:text-gray-900 font-medium'
+                      ? 'text-white font-bold'
+                      : 'text-gray-800 hover:text-gray-900 font-bold'
                   }`}
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -323,13 +444,15 @@ export const LoginScreen = () => {
                 <button
                   onClick={() => {
                     setMode('signup');
+                    setStep('form');
+                    setEmail('');
                     setPassword('');
                     setConfirmPassword('');
                   }}
                   className={`relative z-10 w-24 py-2 rounded-full flex items-center justify-center gap-2 transition-all duration-300 ${
                     mode === 'signup'
-                      ? 'text-white font-semibold'
-                      : 'text-gray-800 hover:text-gray-900 font-medium'
+                      ? 'text-white font-bold'
+                      : 'text-gray-800 hover:text-gray-900 font-bold'
                   }`}
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -365,6 +488,28 @@ export const LoginScreen = () => {
                     placeholder={mode === 'login' ? 'username' : 'new username'}
                     className="flex-1 px-4 py-4 text-base rounded-xl bg-transparent text-gray-800 placeholder-gray-400 outline-none"
                     maxLength={15}
+                  />
+                </div>
+              </div>
+
+              {/* Email Input - Only for signup */}
+              <div className={`transform transition-all duration-300 overflow-hidden ${
+                mode === 'signup' ? 'max-h-20 opacity-100' : 'max-h-0 opacity-0'
+              }`}>
+                <div className="flex items-center bg-white rounded-xl border-2 border-gray-300 focus-within:border-green-500 focus-within:ring-2 focus-within:ring-green-200 transition-all shadow-md">
+                  <div className="pl-4 text-gray-400">
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                  </div>
+                  <input
+                    id="email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    onKeyPress={handleKeyPress}
+                    placeholder="email"
+                    className="flex-1 px-4 py-4 text-base rounded-xl bg-transparent text-gray-800 placeholder-gray-400 outline-none"
                   />
                 </div>
               </div>
@@ -467,7 +612,8 @@ export const LoginScreen = () => {
               </div>
 
             </div>
-
+              </>
+            )}
 
           </div>
         </div>

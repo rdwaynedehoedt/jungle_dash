@@ -11,8 +11,13 @@ import { useAuthStore } from '../state/useAuthStore';
 export const LoginScreen = () => {
   const [mode, setMode] = useState<'login' | 'signup'>('login');
   const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPinModal, setShowPinModal] = useState(false);
+  const [verificationCode, setVerificationCode] = useState('');
+  const [enteredPin, setEnteredPin] = useState('');
+  const [pendingUserData, setPendingUserData] = useState<{username: string; email: string; password: string} | null>(null);
   const { setUsername: saveUsername } = useAuthStore();
 
   const validateUsername = (username: string) => {
@@ -41,13 +46,28 @@ export const LoginScreen = () => {
   };
 
   const validatePassword = (password: string) => {
-    if (mode === 'signup' && !password) {
+    if (!password) {
       toast.error('Enter password');
       return false;
     }
 
-    if (mode === 'signup' && password.length < 6) {
+    if (password.length < 6) {
       toast.error('Password too short (min 6)');
+      return false;
+    }
+
+    return true;
+  };
+
+  const validateEmail = (email: string) => {
+    if (!email) {
+      toast.error('Enter email');
+      return false;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      toast.error('Invalid email format');
       return false;
     }
 
@@ -58,6 +78,7 @@ export const LoginScreen = () => {
     const trimmedUsername = username.trim();
     
     if (!validateUsername(trimmedUsername)) return;
+    if (!validatePassword(password)) return;
 
     // Check if user exists in localStorage
     const users = JSON.parse(localStorage.getItem('jungle_dash_users') || '{}');
@@ -67,15 +88,22 @@ export const LoginScreen = () => {
       return;
     }
 
-    // For login, password is optional for now
+    // Check password
+    if (users[trimmedUsername].password !== password) {
+      toast.error('Wrong password');
+      return;
+    }
+
     toast.success(`Welcome, ${trimmedUsername}!`);
     saveUsername(trimmedUsername);
   };
 
   const handleSignup = () => {
     const trimmedUsername = username.trim();
+    const trimmedEmail = email.trim();
     
     if (!validateUsername(trimmedUsername)) return;
+    if (!validateEmail(trimmedEmail)) return;
     if (!validatePassword(password)) return;
 
     // Check password confirmation
@@ -92,12 +120,78 @@ export const LoginScreen = () => {
       return;
     }
 
-    // Save new user
-    users[trimmedUsername] = { password, createdAt: new Date().toISOString() };
-    localStorage.setItem('jungle_dash_users', JSON.stringify(users));
+    // Check if email already exists
+    const userEmails = Object.values(users).map((u: any) => u.email);
+    if (userEmails.includes(trimmedEmail)) {
+      toast.error('Email already registered');
+      return;
+    }
 
-    toast.success(`Welcome, ${trimmedUsername}!`);
-    saveUsername(trimmedUsername);
+    // Generate 8-digit verification code
+    const code = Math.floor(10000000 + Math.random() * 90000000).toString();
+    setVerificationCode(code);
+    
+    // Store pending user data
+    setPendingUserData({
+      username: trimmedUsername,
+      email: trimmedEmail,
+      password: password
+    });
+
+    // Show code in toast for testing (later will be sent via email)
+    toast.success(`Verification code: ${code}`, { duration: 10000 });
+    
+    // Open PIN modal
+    setShowPinModal(true);
+    setEnteredPin('');
+  };
+
+  const handleVerifyPin = () => {
+    if (enteredPin.length !== 8) {
+      toast.error('Enter 8-digit code');
+      return;
+    }
+
+    if (enteredPin !== verificationCode) {
+      toast.error('Invalid code');
+      return;
+    }
+
+    // Code is correct, save user
+    if (pendingUserData) {
+      const users = JSON.parse(localStorage.getItem('jungle_dash_users') || '{}');
+      users[pendingUserData.username] = {
+        email: pendingUserData.email,
+        password: pendingUserData.password,
+        createdAt: new Date().toISOString(),
+        verified: true
+      };
+      localStorage.setItem('jungle_dash_users', JSON.stringify(users));
+
+      toast.success(`Welcome, ${pendingUserData.username}!`);
+      saveUsername(pendingUserData.username);
+      
+      // Close modal and reset
+      setShowPinModal(false);
+      setPendingUserData(null);
+      setVerificationCode('');
+      setEnteredPin('');
+    }
+  };
+
+  const handleResendCode = () => {
+    // Generate new code
+    const code = Math.floor(10000000 + Math.random() * 90000000).toString();
+    setVerificationCode(code);
+    setEnteredPin('');
+    toast.success(`New code: ${code}`, { duration: 10000 });
+  };
+
+  const handleClosePinModal = () => {
+    setShowPinModal(false);
+    setPendingUserData(null);
+    setVerificationCode('');
+    setEnteredPin('');
   };
 
   const handleSubmit = () => {
@@ -130,12 +224,6 @@ export const LoginScreen = () => {
     if (e.key === 'Enter') {
       handleSubmit();
     }
-  };
-
-  const switchMode = () => {
-    setMode(mode === 'login' ? 'signup' : 'login');
-    setPassword('');
-    setConfirmPassword('');
   };
 
   return (
@@ -212,58 +300,77 @@ export const LoginScreen = () => {
               />
             </div>
 
-            {/* Login/Signup Toggle - Minimal icons */}
-            <div className="flex justify-center gap-4 mb-6">
-              <button
-                onClick={() => setMode('login')}
-                className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-200 ${
-                  mode === 'login'
-                    ? 'bg-green-500 text-white shadow-lg scale-110'
-                    : 'bg-white/60 text-gray-500 hover:bg-white/90'
-                }`}
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
-                </svg>
-              </button>
-              <button
-                onClick={() => setMode('signup')}
-                className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-200 ${
-                  mode === 'signup'
-                    ? 'bg-green-500 text-white shadow-lg scale-110'
-                    : 'bg-white/60 text-gray-500 hover:bg-white/90'
-                }`}
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
-                </svg>
-              </button>
-            </div>
-
-            {/* Username Input with icon */}
-            <div className="mb-6">
-              <div className="flex items-center bg-white rounded-xl border-2 border-gray-300 focus-within:border-green-500 focus-within:ring-2 focus-within:ring-green-200 transition-all shadow-md">
-                <div className="pl-4 text-gray-400">
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            {/* Login/Signup Toggle - Smooth pill style */}
+            <div className="relative rounded-full p-1 mb-8 w-fit mx-auto">
+              <div className="flex gap-1">
+                <button
+                  onClick={() => {
+                    setMode('login');
+                    setPassword('');
+                    setConfirmPassword('');
+                  }}
+                  className={`relative z-10 w-24 py-2 rounded-full flex items-center justify-center gap-2 transition-all duration-300 ${
+                    mode === 'login'
+                      ? 'text-white font-semibold'
+                      : 'text-gray-800 hover:text-gray-900 font-medium'
+                  }`}
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
                   </svg>
-                </div>
-                <input
-                  id="username"
-                  type="text"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  onKeyPress={handleKeyPress}
-                  placeholder={mode === 'login' ? 'username' : 'new username'}
-                  className="flex-1 px-4 py-4 text-base rounded-xl bg-transparent text-gray-800 placeholder-gray-400 outline-none"
-                  maxLength={15}
-                />
+                  <span className="text-sm">Login</span>
+                </button>
+                <button
+                  onClick={() => {
+                    setMode('signup');
+                    setPassword('');
+                    setConfirmPassword('');
+                  }}
+                  className={`relative z-10 w-24 py-2 rounded-full flex items-center justify-center gap-2 transition-all duration-300 ${
+                    mode === 'signup'
+                      ? 'text-white font-semibold'
+                      : 'text-gray-800 hover:text-gray-900 font-medium'
+                  }`}
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                  </svg>
+                  <span className="text-sm">Sign Up</span>
+                </button>
               </div>
+              {/* Sliding background */}
+              <div
+                className={`absolute top-1 left-1 w-24 h-[calc(100%-0.5rem)] bg-[#4A972C] rounded-full shadow-md transition-transform duration-300 ease-out ${
+                  mode === 'signup' ? 'translate-x-[6.25rem]' : 'translate-x-0'
+                }`}
+              />
             </div>
 
-            {/* Password Input with icon */}
-            {mode === 'signup' && (
-              <div className="mb-5">
+            {/* Form inputs with smooth transitions */}
+            <div className="space-y-5">
+              {/* Username Input with icon */}
+              <div className="transform transition-all duration-300">
+                <div className="flex items-center bg-white rounded-xl border-2 border-gray-300 focus-within:border-green-500 focus-within:ring-2 focus-within:ring-green-200 transition-all shadow-md">
+                  <div className="pl-4 text-gray-400">
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                  </div>
+                  <input
+                    id="username"
+                    type="text"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    onKeyPress={handleKeyPress}
+                    placeholder={mode === 'login' ? 'username' : 'new username'}
+                    className="flex-1 px-4 py-4 text-base rounded-xl bg-transparent text-gray-800 placeholder-gray-400 outline-none"
+                    maxLength={15}
+                  />
+                </div>
+              </div>
+
+              {/* Password Input with icon */}
+              <div className="transform transition-all duration-300">
                 <div className="flex items-center bg-white rounded-xl border-2 border-gray-300 focus-within:border-green-500 focus-within:ring-2 focus-within:ring-green-200 transition-all shadow-md">
                   <div className="pl-4 text-gray-400">
                     <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -281,11 +388,11 @@ export const LoginScreen = () => {
                   />
                 </div>
               </div>
-            )}
 
-            {/* Confirm Password Input - Only for signup */}
-            {mode === 'signup' && (
-              <div className="mb-8">
+              {/* Confirm Password Input - Smooth slide in/out for signup */}
+              <div className={`transform transition-all duration-300 overflow-hidden ${
+                mode === 'signup' ? 'max-h-20 opacity-100' : 'max-h-0 opacity-0'
+              }`}>
                 <div className="flex items-center bg-white rounded-xl border-2 border-gray-300 focus-within:border-green-500 focus-within:ring-2 focus-within:ring-green-200 transition-all shadow-md">
                   <div className="pl-4 text-gray-400">
                     <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -303,11 +410,7 @@ export const LoginScreen = () => {
                   />
                 </div>
               </div>
-            )}
-
-            {mode === 'login' && (
-              <div className="mb-8"></div>
-            )}
+            </div>
 
 
             {/* Icon Buttons Row */}

@@ -1,10 +1,10 @@
 /**
  * SOURCE: Custom implementation
  * PURPOSE: Settings screen with volume controls and preferences
- * MODIFICATIONS: Wooden box aesthetic with PNG assets for cute UI
+ * MODIFICATIONS: Wooden box aesthetic with PNG assets for cute UI + macOS-like animations
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 interface SettingsScreenProps {
   onClose: () => void;
@@ -15,6 +15,21 @@ export const SettingsScreen = ({ onClose }: SettingsScreenProps) => {
   const [sfxVolume, setSfxVolume] = useState(8);
   const [musicEnabled, setMusicEnabled] = useState(true);
   const [sfxEnabled, setSfxEnabled] = useState(true);
+  const [isAnimating, setIsAnimating] = useState(false);
+
+  useEffect(() => {
+    // Trigger open animation
+    setIsAnimating(true);
+  }, []);
+
+  const handleClose = () => {
+    // Trigger close animation
+    setIsAnimating(false);
+    // Wait for animation to finish before actually closing
+    setTimeout(() => {
+      onClose();
+    }, 300);
+  };
 
   const increaseVolume = (current: number, setter: (val: number) => void) => {
     if (current < 10) setter(current + 1);
@@ -25,12 +40,16 @@ export const SettingsScreen = ({ onClose }: SettingsScreenProps) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
-      {/* Dark overlay */}
-      <div className="absolute inset-0 bg-black/60" onClick={onClose} />
+    <div className={`fixed inset-0 z-50 flex items-center justify-center px-4 transition-opacity duration-300 ${
+      isAnimating ? 'opacity-100' : 'opacity-0'
+    }`}>
+      {/* Blur overlay */}
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-md" onClick={handleClose} />
       
       {/* Settings Box Container */}
-      <div className="relative w-full max-w-2xl">
+      <div className={`relative w-full max-w-2xl transition-all duration-300 ${
+        isAnimating ? 'scale-100 opacity-100' : 'scale-90 opacity-0'
+      }`}>
         
         {/* Title Image - Half outside box at top */}
         <div className="absolute -top-20 left-1/2 transform -translate-x-1/2 z-10">
@@ -38,6 +57,7 @@ export const SettingsScreen = ({ onClose }: SettingsScreenProps) => {
             src="/PNG/settings/Settings topic_center.png" 
             alt="Settings" 
             className="h-40 w-auto drop-shadow-2xl"
+            style={{ transform: 'scaleX(1.15)' }}
           />
         </div>
 
@@ -57,7 +77,7 @@ export const SettingsScreen = ({ onClose }: SettingsScreenProps) => {
             
             {/* Close button */}
             <button
-              onClick={onClose}
+              onClick={handleClose}
               className="absolute top-4 right-4 transform hover:scale-110 active:scale-95 transition-transform duration-200"
             >
               <img 
@@ -207,7 +227,7 @@ export const SettingsScreen = ({ onClose }: SettingsScreenProps) => {
             {/* Save Button */}
             <div className="flex items-center justify-center mt-6">
               <button
-                onClick={onClose}
+                onClick={handleClose}
                 className="transform hover:scale-110 active:scale-95 transition-transform duration-200"
               >
                 <img 

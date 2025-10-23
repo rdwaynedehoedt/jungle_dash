@@ -7,10 +7,14 @@
 import { useState } from 'react';
 import { useAuthStore } from '../state/useAuthStore';
 import { SettingsScreen } from './SettingsScreen';
+import { ShopScreen } from './ShopScreen';
+import { ProfileScreen } from './ProfileScreen';
 
 export const StartScreen = () => {
   const { username, logout } = useAuthStore();
   const [showSettings, setShowSettings] = useState(false);
+  const [showShop, setShowShop] = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
 
   return (
     <div className="min-h-screen w-full relative overflow-hidden">
@@ -79,7 +83,10 @@ export const StartScreen = () => {
           
           {/* Shop */}
           <div className="relative group">
-            <button className="transform hover:scale-110 active:scale-95 transition-transform duration-200">
+            <button 
+              onClick={() => setShowShop(true)}
+              className="transform hover:scale-110 active:scale-95 transition-transform duration-200"
+            >
               <img 
                 src="/PNG/btn/shop.png" 
                 alt="Shop" 
@@ -110,7 +117,10 @@ export const StartScreen = () => {
 
           {/* Profile */}
           <div className="relative group">
-            <button className="transform hover:scale-110 active:scale-95 transition-transform duration-200">
+            <button 
+              onClick={() => setShowProfile(true)}
+              className="transform hover:scale-110 active:scale-95 transition-transform duration-200"
+            >
               <img 
                 src="/PNG/btn/leader.png" 
                 alt="Profile" 
@@ -144,6 +154,12 @@ export const StartScreen = () => {
 
       {/* Settings Modal */}
       {showSettings && <SettingsScreen onClose={() => setShowSettings(false)} />}
+      
+      {/* Shop Modal */}
+      {showShop && <ShopScreen onClose={() => setShowShop(false)} />}
+      
+      {/* Profile Modal */}
+      {showProfile && <ProfileScreen onClose={() => setShowProfile(false)} />}
     </div>
   );
 };

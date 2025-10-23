@@ -40,11 +40,14 @@ export const SettingsScreen = ({ onClose }: SettingsScreenProps) => {
   };
 
   return (
-    <div className={`fixed inset-0 z-50 flex items-center justify-center px-4 transition-opacity duration-300 ${
-      isAnimating ? 'opacity-100' : 'opacity-0'
-    }`}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
       {/* Blur overlay */}
-      <div className="absolute inset-0 bg-black/50 backdrop-blur-md" onClick={handleClose} />
+      <div 
+        className={`absolute inset-0 bg-black/50 transition-all duration-300 ${
+          isAnimating ? 'backdrop-blur-md opacity-100' : 'backdrop-blur-none opacity-0'
+        }`}
+        onClick={handleClose} 
+      />
       
       {/* Settings Box Container */}
       <div className={`relative w-full max-w-2xl transition-all duration-300 ${

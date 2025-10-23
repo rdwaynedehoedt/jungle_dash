@@ -1,0 +1,58 @@
+# Jungle Dash - Project Rules
+
+## Architecture Guidelines
+
+### Core Logic Rules (`/core`)
+- **NO React imports** in core game logic
+- Pure TypeScript/JavaScript only
+- Export pure functions and classes
+- No side effects (except internal state changes)
+- All game mechanics must be testable without UI
+- Files: Player.ts, ObstacleManager.ts, GameController.ts, types.ts, events.ts
+
+### Services Layer (`/services`)
+- All HTTP API calls go through `heartApi.ts`
+- localStorage operations in `storage.ts`
+- No direct API calls from components or core
+- Use Axios for HTTP client
+- Validate API responses with Zod schemas
+
+### State Management (`/state`)
+- Use Zustand for global state
+- Keep stores small and focused
+- Export typed hooks (useGameStore, etc.)
+- No business logic in stores - delegate to `/core`
+
+### UI Components (`/ui`)
+- Pure React components
+- Props and state only - no game logic
+- Use Zustand hooks for global state
+- TailwindCSS for styling
+- Components: GameCanvas.tsx, HUD.tsx, StartScreen.tsx, GameOverScreen.tsx, TriviaModal.tsx
+
+### Type Safety
+- Use TypeScript strict mode
+- Define all types in `/core/types.ts` or component files
+- No `any` types unless absolutely necessary
+- Validate external data with Zod
+
+### File Organization
+```
+/src
+  /core          → Pure game logic (no React)
+  /services      → API & storage
+  /state         → Zustand stores
+  /ui            → React components
+  /styles        → Global CSS
+  App.tsx
+  main.tsx
+```
+
+### Best Practices
+- Keep components small and focused
+- Separate concerns: logic vs presentation
+- Use meaningful variable names
+- Comment complex algorithms
+- No hardcoded values - use constants
+- Assets from `/public` folder only
+

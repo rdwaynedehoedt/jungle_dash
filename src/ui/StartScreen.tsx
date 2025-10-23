@@ -9,12 +9,29 @@ import { useAuthStore } from '../state/useAuthStore';
 import { SettingsScreen } from './SettingsScreen';
 import { ShopScreen } from './ShopScreen';
 import { ProfileScreen } from './ProfileScreen';
+import { LevelSelectScreen } from './LevelSelectScreen';
+import { CountdownScreen } from './CountdownScreen';
 
 export const StartScreen = () => {
   const { username, logout } = useAuthStore();
   const [showSettings, setShowSettings] = useState(false);
   const [showShop, setShowShop] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
+  const [showLevelSelect, setShowLevelSelect] = useState(false);
+  const [showCountdown, setShowCountdown] = useState(false);
+  const [selectedDifficulty, setSelectedDifficulty] = useState<'EASY' | 'MEDIUM' | 'HARD'>('EASY');
+
+  const handleLevelSelect = (difficulty: 'EASY' | 'MEDIUM' | 'HARD') => {
+    setSelectedDifficulty(difficulty);
+    setShowLevelSelect(false);
+    setShowCountdown(true);
+  };
+
+  const handleCountdownComplete = () => {
+    setShowCountdown(false);
+    // TODO: Start actual game
+    console.log('Starting game with difficulty:', selectedDifficulty);
+  };
 
   return (
     <div className="min-h-screen w-full relative overflow-hidden">
@@ -69,7 +86,10 @@ export const StartScreen = () => {
         {/* Center Section - Main Play Button */}
         <div className="flex flex-col items-center">
           {/* Play Button */}
-          <button className="transform hover:scale-110 active:scale-95 transition-transform duration-200 drop-shadow-2xl">
+          <button 
+            onClick={() => setShowLevelSelect(true)}
+            className="transform hover:scale-110 active:scale-95 transition-transform duration-200 drop-shadow-2xl"
+          >
             <img 
               src="/PNG/menu/play.png" 
               alt="Play" 
@@ -160,6 +180,22 @@ export const StartScreen = () => {
       
       {/* Profile Modal */}
       {showProfile && <ProfileScreen onClose={() => setShowProfile(false)} />}
+      
+      {/* Level Select Modal */}
+      {showLevelSelect && (
+        <LevelSelectScreen 
+          onClose={() => setShowLevelSelect(false)}
+          onSelectLevel={handleLevelSelect}
+        />
+      )}
+        
+      {/* Countdown Screen */}
+      {showCountdown && (
+        <CountdownScreen 
+          difficulty={selectedDifficulty}
+          onCountdownComplete={handleCountdownComplete}
+        />
+      )}
     </div>
   );
 };

@@ -1,31 +1,129 @@
 /**
- * SOURCE: Custom implementation
- * PURPOSE: Authentication state management (UI only for now)
- * MODIFICATIONS: Basic username storage, will add real auth later
+ * SOURCE: Zustand documentation + Firebase Auth integration
+ * PURPOSE: Global authentication state management
+ * MODIFICATIONS: Integrated with Firebase auth service
  */
 
 import { create } from 'zustand';
+import { User } from 'firebase/auth';
+import { signUp, login, logout as firebaseLogout, onAuthChange, getUserProfile } from '../services/auth';
+import { UserProfile } from '../services/auth';
 
 interface AuthState {
-  username: string | null;
+  user: User | null;
+  userProfile: UserProfile | null;
   isAuthenticated: boolean;
-  setUsername: (username: string) => void;
-  logout: () => void;
+  isLoading: boolean;
+  error: string | null;
+  
+  setUser: (user: User | null) => void;
+  setUserProfile: (profile: UserProfile | null) => void;
+  signUpUser: (email: string, password: string, username: string) => Promise<void>;
+  loginUser: (email: string, password: string) => Promise<void>;
+  logout: () => Promise<void>;
+  initializeAuth: () => void;
+  clearError: () => void;
 }
 
-export const useAuthStore = create<AuthState>((set) => ({
-  username: null,
+export const useAuthStore = create<AuthState>((set, get) => ({
+  user: null,
+  userProfile: null,
   isAuthenticated: false,
-  
-  setUsername: (username: string) => {
-    set({ username, isAuthenticated: true });
-    // Save to localStorage for persistence
-    localStorage.setItem('jungle_dash_username', username);
-  },
-  
-  logout: () => {
-    set({ username: null, isAuthenticated: false });
-    localStorage.removeItem('jungle_dash_username');
-  },
-}));
+  isLoading: true,
+  error: null,
 
+  setUser: (user) => {
+    set({ user, isAuthenticated: !!user, isLoading: false });
+  },
+
+  setUserProfile: (profile) => {
+    set({ userProfile: profile });
+  },
+
+  signUpUser: async (email, password, username) => {
+    try {
+      set({ isLoading: true, error: null });
+      const user = await signUp(email, password, username);
+      const profile = await getUserProfile(user.uid);
+      set({ 
+        user, 
+        userProfile: profile, 
+        isAuthenticated: true, 
+        isLoading: false,
+        error: null 
+      });
+    } catch (error: any) {
+      set({ 
+        error: error.message || 'Failed to sign up', 
+        isLoading: false 
+      });
+      throw error;
+    }
+  },
+
+  loginUser: async (email, password) => {
+    try {
+      set({ isLoading: true, error: null });
+      const user = await login(email, password);
+      const profile = await getUserProfile(user.uid);
+      set({ 
+        user, 
+        userProfile: profile, 
+        isAuthenticated: true, 
+        isLoading: false,
+        error: null 
+      });
+    } catch (error: any) {
+      set({ 
+        error: error.message || 'Failed to login', 
+        isLoading: false 
+      });
+      throw error;
+    }
+  },
+
+  logout: async () => {
+    try {
+      set({ isLoading: true, error: null });
+      await firebaseLogout();
+      set({ 
+        user: null, 
+        userProfile: null, 
+        isAuthenticated: false, 
+        isLoading: false,
+        error: null 
+      });
+    } catch (error: any) {
+      set({ 
+        error: error.message || 'Failed to logout', 
+        isLoading: false 
+      });
+      throw error;
+    }
+  },
+
+  initializeAuth: () => {
+    onAuthChange(async (user) => {
+      if (user) {
+        const profile = await getUserProfile(user.uid);
+        set({ 
+          user, 
+          userProfile: profile, 
+          isAuthenticated: true, 
+          isLoading: false 
+        });
+      } else {
+        set({ 
+          user: null, 
+          userProfile: null, 
+          isAuthenticated: false, 
+          isLoading: false 
+        });
+      }
+    });
+  },
+
+  clearError: () => {
+    set({ error: null });
+  }
+}));

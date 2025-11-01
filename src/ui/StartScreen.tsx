@@ -13,7 +13,7 @@ import { LevelSelectScreen } from './LevelSelectScreen';
 import { CountdownScreen } from './CountdownScreen';
 
 export const StartScreen = () => {
-  const { username, logout } = useAuthStore();
+  const { userProfile, logout } = useAuthStore();
   const [showSettings, setShowSettings] = useState(false);
   const [showShop, setShowShop] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
@@ -77,7 +77,7 @@ export const StartScreen = () => {
               }}
             >
               <p className="text-xl font-bold text-center text-gray-800 whitespace-nowrap">
-                Welcome, {username}!
+                Welcome, {userProfile?.username || 'Player'}!
               </p>
             </div>
           </div>

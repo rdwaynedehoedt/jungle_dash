@@ -11,15 +11,19 @@ import { LoginScreen } from './ui/LoginScreen';
 import { StartScreen } from './ui/StartScreen';
 
 function App() {
-  const { isAuthenticated, setUsername } = useAuthStore();
+  const { isAuthenticated, isLoading, initializeAuth } = useAuthStore();
 
-  // Check for existing username in localStorage on mount
   useEffect(() => {
-    const savedUsername = localStorage.getItem('jungle_dash_username');
-    if (savedUsername) {
-      setUsername(savedUsername);
-    }
-  }, [setUsername]);
+    initializeAuth();
+  }, [initializeAuth]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-b from-green-400 to-green-600">
+        <div className="text-white text-2xl font-bold">Loading...</div>
+      </div>
+    );
+  }
 
   return (
     <>

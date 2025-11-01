@@ -1,7 +1,7 @@
 /**
- * SOURCE: Custom implementation with react-hot-toast notifications
- * PURPOSE: Clean login with icons, tooltips, and proper validation alerts
- * MODIFICATIONS: Icon-only buttons with toast notifications for errors
+ * SOURCE: Custom implementation with Firebase Authentication
+ * PURPOSE: Email/Password authentication integrated with Firebase
+ * MODIFICATIONS: Replaced localStorage with Firebase auth service
  */
 
 import { useState } from 'react';
@@ -10,15 +10,12 @@ import { useAuthStore } from '../state/useAuthStore';
 
 export const LoginScreen = () => {
   const [mode, setMode] = useState<'login' | 'signup'>('login');
-  const [step, setStep] = useState<'form' | 'verify'>('form');
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [verificationCode, setVerificationCode] = useState('');
-  const [enteredPin, setEnteredPin] = useState('');
-  const [pendingUserData, setPendingUserData] = useState<{username: string; email: string; password: string} | null>(null);
-  const { setUsername: saveUsername } = useAuthStore();
+  const [isLoading, setIsLoading] = useState(false);
+  const { signUpUser, loginUser } = useAuthStore();
 
   const validateUsername = (username: string) => {
     if (!username) {
@@ -74,31 +71,24 @@ export const LoginScreen = () => {
     return true;
   };
 
-  const handleLogin = () => {
-    const trimmedUsername = username.trim();
+  const handleLogin = async () => {
+    const trimmedEmail = email.trim();
     
-    if (!validateUsername(trimmedUsername)) return;
+    if (!validateEmail(trimmedEmail)) return;
     if (!validatePassword(password)) return;
 
-    // Check if user exists in localStorage
-    const users = JSON.parse(localStorage.getItem('jungle_dash_users') || '{}');
-    
-    if (!users[trimmedUsername]) {
-      toast.error('User not found');
-      return;
+    setIsLoading(true);
+    try {
+      await loginUser(trimmedEmail, password);
+      toast.success('Welcome back!');
+    } catch (error: any) {
+      toast.error(error.message || 'Login failed');
+    } finally {
+      setIsLoading(false);
     }
-
-    // Check password
-    if (users[trimmedUsername].password !== password) {
-      toast.error('Wrong password');
-      return;
-    }
-
-    toast.success(`Welcome, ${trimmedUsername}!`);
-    saveUsername(trimmedUsername);
   };
 
-  const handleSignup = () => {
+  const handleSignup = async () => {
     const trimmedUsername = username.trim();
     const trimmedEmail = email.trim();
     
@@ -106,103 +96,27 @@ export const LoginScreen = () => {
     if (!validateEmail(trimmedEmail)) return;
     if (!validatePassword(password)) return;
 
-    // Check password confirmation
     if (password !== confirmPassword) {
       toast.error('Passwords don\'t match');
       return;
     }
 
-    // Check if user already exists
-    const users = JSON.parse(localStorage.getItem('jungle_dash_users') || '{}');
-    
-    if (users[trimmedUsername]) {
-      toast.error('Username taken');
-      return;
-    }
-
-    // Check if email already exists
-    const userEmails = Object.values(users).map((u: any) => u.email);
-    if (userEmails.includes(trimmedEmail)) {
-      toast.error('Email already registered');
-      return;
-    }
-
-    // Generate 8-digit verification code
-    const code = Math.floor(10000000 + Math.random() * 90000000).toString();
-    setVerificationCode(code);
-    
-    // Store pending user data
-    setPendingUserData({
-      username: trimmedUsername,
-      email: trimmedEmail,
-      password: password
-    });
-
-    // Show code in toast for testing (later will be sent via email)
-    toast.success(`Code sent to ${trimmedEmail}`, { duration: 4000 });
-    toast.success(`Code: ${code}`, { duration: 10000 });
-    
-    // Switch to verification step
-    setStep('verify');
-    setEnteredPin('');
-  };
-
-  const handleVerifyPin = () => {
-    if (enteredPin.length !== 8) {
-      toast.error('Enter 8-digit code');
-      return;
-    }
-
-    if (enteredPin !== verificationCode) {
-      toast.error('Invalid code');
-      return;
-    }
-
-    // Code is correct, save user
-    if (pendingUserData) {
-      const users = JSON.parse(localStorage.getItem('jungle_dash_users') || '{}');
-      users[pendingUserData.username] = {
-        email: pendingUserData.email,
-        password: pendingUserData.password,
-        createdAt: new Date().toISOString(),
-        verified: true
-      };
-      localStorage.setItem('jungle_dash_users', JSON.stringify(users));
-
-      toast.success(`Welcome, ${pendingUserData.username}!`);
-      saveUsername(pendingUserData.username);
-      
-      // Reset everything
-      setStep('form');
-      setPendingUserData(null);
-      setVerificationCode('');
-      setEnteredPin('');
+    setIsLoading(true);
+    try {
+      await signUpUser(trimmedEmail, password, trimmedUsername);
+      toast.success(`Welcome, ${trimmedUsername}!`);
+    } catch (error: any) {
+      toast.error(error.message || 'Signup failed');
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handleResendCode = () => {
-    // Generate new code
-    const code = Math.floor(10000000 + Math.random() * 90000000).toString();
-    setVerificationCode(code);
-    setEnteredPin('');
-    if (pendingUserData?.email) {
-      toast.success(`Code sent to ${pendingUserData.email}`, { duration: 4000 });
-    }
-    toast.success(`Code: ${code}`, { duration: 10000 });
-  };
-
-  const handleBackToForm = () => {
-    setStep('form');
-    setPendingUserData(null);
-    setVerificationCode('');
-    setEnteredPin('');
-  };
-
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (mode === 'login') {
-      handleLogin();
+      await handleLogin();
     } else {
-      handleSignup();
+      await handleSignup();
     }
   };
 
@@ -225,7 +139,7 @@ export const LoginScreen = () => {
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
+    if (e.key === 'Enter' && !isLoading) {
       handleSubmit();
     }
   };
@@ -303,112 +217,6 @@ export const LoginScreen = () => {
           
           {/* Content on wooden board */}
           <div className="relative px-14 py-16">
-            
-            {/* Show verification form or login/signup form */}
-            {step === 'verify' ? (
-              // VERIFICATION FORM
-              <div className="space-y-6">
-                {/* Title */}
-                <div className="text-center mb-8">
-                  <h2 className="text-5xl font-black whitespace-nowrap" style={{ 
-                    fontFamily: '"Fredoka One", "Lilita One", "Baloo 2", "Bubblegum Sans", Rounded, cursive, sans-serif',
-                    color: '#4A972C',
-                    WebkitTextStroke: '0.5px white',
-                    textShadow: '3px 3px 0px rgba(0,0,0,0.15)',
-                    letterSpacing: '1px',
-                    fontWeight: '900'
-                  }}>
-                    Verify Email
-                  </h2>
-                </div>
-
-                {/* PIN Input */}
-                <div>
-                  <div className="flex items-center bg-white rounded-xl border-2 border-gray-300 focus-within:border-green-500 focus-within:ring-2 focus-within:ring-green-200 transition-all shadow-md">
-                    <div className="pl-4 text-gray-400">
-                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
-                      </svg>
-                    </div>
-                    <input
-                      id="pin"
-                      type="text"
-                      value={enteredPin}
-                      onChange={(e) => {
-                        const val = e.target.value.replace(/\D/g, '');
-                        if (val.length <= 8) {
-                          setEnteredPin(val);
-                        }
-                      }}
-                      onKeyPress={(e) => {
-                        if (e.key === 'Enter') {
-                          handleVerifyPin();
-                        }
-                      }}
-                      placeholder="8-digit code"
-                      className="flex-1 px-4 py-4 text-base rounded-xl bg-transparent text-gray-800 placeholder-gray-400 outline-none tracking-widest font-mono"
-                      maxLength={8}
-                      autoFocus
-                    />
-                  </div>
-                </div>
-
-                {/* Buttons Row */}
-                <div className="flex items-center justify-center gap-4 mt-6">
-                  {/* Back Button */}
-                  <div className="relative group">
-                    <button
-                      onClick={handleBackToForm}
-                      className="transform hover:scale-110 active:scale-95 transition-transform duration-200"
-                    >
-                      <img 
-                        src="/PNG/btn/prew.png" 
-                        alt="Back" 
-                        className="w-16 h-16 drop-shadow-xl"
-                      />
-                    </button>
-                    <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap shadow-lg">
-                      Back
-                    </div>
-                  </div>
-
-                  {/* Resend Button */}
-                  <div className="relative group">
-                    <button
-                      onClick={handleResendCode}
-                      className="transform hover:scale-110 active:scale-95 transition-transform duration-200"
-                    >
-                      <img 
-                        src="/PNG/btn/restart.png" 
-                        alt="Resend" 
-                        className="w-16 h-16 drop-shadow-xl"
-                      />
-                    </button>
-                    <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap shadow-lg">
-                      Resend
-                    </div>
-                  </div>
-
-                  {/* Verify Button */}
-                  <div className="relative group">
-                    <button
-                      onClick={handleVerifyPin}
-                      className="transform hover:scale-110 active:scale-95 transition-transform duration-200"
-                    >
-                      <img 
-                        src="/PNG/btn/next.png" 
-                        alt="Verify" 
-                        className="w-16 h-16 drop-shadow-xl"
-                      />
-                    </button>
-                    <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap shadow-lg">
-                      Verify
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              // LOGIN/SIGNUP FORM
               <>
             {/* Logo at top inside box */}
             <div className="flex justify-center mb-8">
@@ -425,7 +233,6 @@ export const LoginScreen = () => {
                 <button
                   onClick={() => {
                     setMode('login');
-                    setStep('form');
                     setEmail('');
                     setPassword('');
                     setConfirmPassword('');
@@ -444,7 +251,6 @@ export const LoginScreen = () => {
                 <button
                   onClick={() => {
                     setMode('signup');
-                    setStep('form');
                     setEmail('');
                     setPassword('');
                     setConfirmPassword('');
@@ -485,9 +291,10 @@ export const LoginScreen = () => {
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
                     onKeyPress={handleKeyPress}
-                    placeholder={mode === 'login' ? 'username' : 'new username'}
+                    placeholder="username"
                     className="flex-1 px-4 py-4 text-base rounded-xl bg-transparent text-gray-800 placeholder-gray-400 outline-none"
                     maxLength={15}
+                    disabled={isLoading}
                   />
                 </div>
               </div>
@@ -510,6 +317,7 @@ export const LoginScreen = () => {
                     onKeyPress={handleKeyPress}
                     placeholder="email"
                     className="flex-1 px-4 py-4 text-base rounded-xl bg-transparent text-gray-800 placeholder-gray-400 outline-none"
+                    disabled={isLoading}
                   />
                 </div>
               </div>
@@ -530,6 +338,7 @@ export const LoginScreen = () => {
                     onKeyPress={handleKeyPress}
                     placeholder="password"
                     className="flex-1 px-4 py-4 text-base rounded-xl bg-transparent text-gray-800 placeholder-gray-400 outline-none"
+                    disabled={isLoading}
                   />
                 </div>
               </div>
@@ -552,6 +361,7 @@ export const LoginScreen = () => {
                     onKeyPress={handleKeyPress}
                     placeholder="confirm password"
                     className="flex-1 px-4 py-4 text-base rounded-xl bg-transparent text-gray-800 placeholder-gray-400 outline-none"
+                    disabled={isLoading}
                   />
                 </div>
               </div>
@@ -597,7 +407,8 @@ export const LoginScreen = () => {
               <div className="relative group">
                 <button
                   onClick={handleSubmit}
-                  className="transform hover:scale-110 active:scale-95 transition-transform duration-200"
+                  disabled={isLoading}
+                  className="transform hover:scale-110 active:scale-95 transition-transform duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <img 
                     src="/PNG/btn/ok.png" 
@@ -607,13 +418,12 @@ export const LoginScreen = () => {
                 </button>
                 {/* Tooltip */}
                 <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-3 py-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap shadow-lg">
-                  {mode === 'login' ? 'Login' : 'Sign Up'}
+                  {isLoading ? 'Loading...' : mode === 'login' ? 'Login' : 'Sign Up'}
                 </div>
               </div>
 
             </div>
               </>
-            )}
 
           </div>
         </div>

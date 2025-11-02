@@ -50,7 +50,7 @@ export const CountdownScreen = ({ difficulty, onCountdownComplete }: CountdownSc
     });
 
     return () => {
-      timeoutIds.forEach(clearTimeout);
+      timeoutIds.forEach((id) => clearTimeout(id as unknown as number));
     };
   }, [difficulty, onCountdownComplete]);
 

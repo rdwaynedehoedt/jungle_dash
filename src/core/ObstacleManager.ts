@@ -9,7 +9,6 @@ import { Obstacle } from './types';
 export class ObstacleManager {
   private obstacles: Obstacle[] = [];
   private canvasWidth: number;
-  private canvasHeight: number;
   private lanes: number[]; // Y positions for each lane
   private lastSpawnTime: number = 0;
   private spawnInterval: number = 2000; // milliseconds between spawns
@@ -27,7 +26,6 @@ export class ObstacleManager {
 
   constructor(canvasWidth: number, canvasHeight: number) {
     this.canvasWidth = canvasWidth;
-    this.canvasHeight = canvasHeight;
     
     // Calculate 3 evenly spaced lanes (same as player)
     const laneHeight = canvasHeight / 3;
@@ -134,7 +132,6 @@ export class ObstacleManager {
 
   updateCanvasSize(width: number, height: number): void {
     this.canvasWidth = width;
-    this.canvasHeight = height;
     
     // Recalculate lanes
     const laneHeight = height / 3;

@@ -13,7 +13,7 @@ interface ProfileScreenProps {
 
 export const ProfileScreen = ({ onClose }: ProfileScreenProps) => {
   const [isAnimating, setIsAnimating] = useState(false);
-  const username = useAuthStore((state) => state.username);
+  const username = useAuthStore((state) => state.userProfile?.username || 'Player');
 
   useEffect(() => {
     // Trigger open animation

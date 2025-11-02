@@ -6,6 +6,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { Player } from '../core/Player';
+import { ObstacleManager } from '../core/ObstacleManager';
 
 interface GameCanvasProps {
   difficulty: 'EASY' | 'MEDIUM' | 'HARD';
@@ -17,8 +18,8 @@ export const GameCanvas = ({ difficulty, onGameOver, onBack }: GameCanvasProps) 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const playerRef = useRef<Player | null>(null);
+  const obstacleManagerRef = useRef<ObstacleManager | null>(null);
   const animationFrameRef = useRef<number>();
-  const keysPressed = useRef<Set<string>>(new Set());
   const [score, setScore] = useState(0);
 
   useEffect(() => {
@@ -32,6 +33,7 @@ export const GameCanvas = ({ difficulty, onGameOver, onBack }: GameCanvasProps) 
     canvas.height = window.innerHeight;
 
     playerRef.current = new Player(canvas.width, canvas.height);
+    obstacleManagerRef.current = new ObstacleManager(canvas.width, canvas.height);
 
     const runningImage = new Image();
     runningImage.src = '/PNG/game character/game character runing.PNG';
@@ -48,8 +50,12 @@ export const GameCanvas = ({ difficulty, onGameOver, onBack }: GameCanvasProps) 
         onBack();
         return;
       }
-      if (e.key === ' ' || e.key === 'ArrowUp') {
-        playerRef.current?.jump();
+      if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') {
+        playerRef.current?.moveUp();
+        e.preventDefault();
+      }
+      if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') {
+        playerRef.current?.moveDown();
         e.preventDefault();
       }
     };
@@ -62,7 +68,19 @@ export const GameCanvas = ({ difficulty, onGameOver, onBack }: GameCanvasProps) 
       const deltaTime = (currentTime - lastTime) / 1000;
       lastTime = currentTime;
 
+      // Update player
       playerRef.current?.update();
+
+      // Update obstacles
+      obstacleManagerRef.current?.update(currentTime);
+
+      // Check for collision
+      const player = playerRef.current?.getBounds();
+      if (player && obstacleManagerRef.current?.checkCollision(player)) {
+        gameRunning = false;
+        onGameOver();
+        return;
+      }
 
       scoreAccumulator += deltaTime;
       if (scoreAccumulator >= 0.1) {
@@ -72,7 +90,26 @@ export const GameCanvas = ({ difficulty, onGameOver, onBack }: GameCanvasProps) 
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      const player = playerRef.current?.getBounds();
+      // Draw obstacles
+      const obstacles = obstacleManagerRef.current?.getObstacles() || [];
+      obstacles.forEach(obstacle => {
+        const obstacleImage = obstacleManagerRef.current?.getObstacleImage(obstacle.type);
+        if (obstacleImage && obstacleImage.complete) {
+          ctx.drawImage(
+            obstacleImage,
+            obstacle.x,
+            obstacle.y,
+            obstacle.width,
+            obstacle.height
+          );
+        } else {
+          // Fallback: draw a colored rectangle
+          ctx.fillStyle = '#8B4513';
+          ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
+        }
+      });
+
+      // Draw player
       const isOnGround = playerRef.current?.isOnGround();
       
       if (player) {

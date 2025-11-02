@@ -1,6 +1,6 @@
 /**
  * SOURCE: Custom implementation
- * PURPOSE: Player class - handles vertical movement (UP/DOWN)
+ * PURPOSE: Player class - handles lane switching (UP/DOWN between 3 lanes)
  * MODIFICATIONS: Pure TypeScript, no React dependencies
  */
 
@@ -11,44 +11,67 @@ export class Player {
   private y: number;
   private width: number;
   private height: number;
-  private velocityY: number;
-  private gravity: number;
-  private jumpPower: number;
-  private isJumping: boolean;
-  private groundY: number;
+  private currentLane: number; // 0 = top, 1 = middle, 2 = bottom
+  private lanes: number[]; // Y positions for each lane
+  private isMoving: boolean;
+  private moveSpeed: number;
+  private targetY: number;
 
   constructor(_canvasWidth: number, canvasHeight: number) {
-    this.width = 300;
-    this.height = 300;
-    this.x = 100;
-    this.groundY = canvasHeight - this.height - 50;
-    this.y = this.groundY;
-    this.velocityY = 0;
-    this.gravity = 1.2;
-    this.jumpPower = -28;
-    this.isJumping = false;
+    this.width = 300;  // Made character bigger
+    this.height = 300; // Made character bigger
+    this.x = 150;
+    this.moveSpeed = 15; // Speed of lane switching
+    
+    // Calculate 3 evenly spaced lanes
+    const laneHeight = canvasHeight / 3;
+    this.lanes = [
+      laneHeight / 2 - this.height / 2,        // Top lane
+      canvasHeight / 2 - this.height / 2,       // Middle lane
+      (laneHeight * 2.5) - this.height / 2      // Bottom lane
+    ];
+    
+    this.currentLane = 1; // Start in middle lane
+    this.y = this.lanes[this.currentLane];
+    this.targetY = this.y;
+    this.isMoving = false;
   }
 
-  jump(): void {
-    if (!this.isJumping) {
-      this.velocityY = this.jumpPower;
-      this.isJumping = true;
+  moveUp(): void {
+    if (this.currentLane > 0 && !this.isMoving) {
+      this.currentLane--;
+      this.targetY = this.lanes[this.currentLane];
+      this.isMoving = true;
+    }
+  }
+
+  moveDown(): void {
+    if (this.currentLane < 2 && !this.isMoving) {
+      this.currentLane++;
+      this.targetY = this.lanes[this.currentLane];
+      this.isMoving = true;
     }
   }
 
   update(): void {
-    this.velocityY += this.gravity;
-    this.y += this.velocityY;
-
-    if (this.y >= this.groundY) {
-      this.y = this.groundY;
-      this.velocityY = 0;
-      this.isJumping = false;
+    // Smooth movement to target lane
+    if (this.isMoving) {
+      const diff = this.targetY - this.y;
+      if (Math.abs(diff) < this.moveSpeed) {
+        this.y = this.targetY;
+        this.isMoving = false;
+      } else {
+        this.y += Math.sign(diff) * this.moveSpeed;
+      }
     }
   }
 
+  getCurrentLane(): number {
+    return this.currentLane;
+  }
+
   isOnGround(): boolean {
-    return !this.isJumping;
+    return !this.isMoving;
   }
 
   getPosition(): Position {
@@ -75,10 +98,16 @@ export class Player {
   }
 
   reset(canvasHeight: number): void {
-    this.groundY = canvasHeight - this.height - 50;
-    this.y = this.groundY;
-    this.velocityY = 0;
-    this.isJumping = false;
+    const laneHeight = canvasHeight / 3;
+    this.lanes = [
+      laneHeight / 2 - this.height / 2,
+      canvasHeight / 2 - this.height / 2,
+      (laneHeight * 2.5) - this.height / 2
+    ];
+    this.currentLane = 1; // Reset to middle lane
+    this.y = this.lanes[this.currentLane];
+    this.targetY = this.y;
+    this.isMoving = false;
   }
 }
 

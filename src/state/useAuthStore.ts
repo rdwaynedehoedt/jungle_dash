@@ -6,7 +6,15 @@
 
 import { create } from 'zustand';
 import { User } from 'firebase/auth';
-import { signUp, login, logout as firebaseLogout, onAuthChange, getUserProfile } from '../services/auth';
+import { 
+  signUp, 
+  login, 
+  logout as firebaseLogout, 
+  onAuthChange, 
+  getUserProfile,
+  signInWithGoogle,
+  resendVerificationEmail
+} from '../services/auth';
 import { UserProfile } from '../services/auth';
 
 interface AuthState {
@@ -20,8 +28,10 @@ interface AuthState {
   setUserProfile: (profile: UserProfile | null) => void;
   signUpUser: (email: string, password: string, username: string) => Promise<void>;
   loginUser: (email: string, password: string) => Promise<void>;
+  loginWithGoogle: () => Promise<void>;
   logout: () => Promise<void>;
   initializeAuth: () => void;
+  resendVerification: () => Promise<void>;
   clearError: () => void;
 }
 
@@ -82,6 +92,27 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
+  loginWithGoogle: async () => {
+    try {
+      set({ isLoading: true, error: null });
+      const user = await signInWithGoogle();
+      const profile = await getUserProfile(user.uid);
+      set({ 
+        user, 
+        userProfile: profile, 
+        isAuthenticated: true, 
+        isLoading: false,
+        error: null 
+      });
+    } catch (error: any) {
+      set({ 
+        error: error.message || 'Failed to sign in with Google', 
+        isLoading: false 
+      });
+      throw error;
+    }
+  },
+
   logout: async () => {
     try {
       set({ isLoading: true, error: null });
@@ -121,6 +152,24 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         });
       }
     });
+  },
+
+  resendVerification: async () => {
+    const { user } = get();
+    if (!user) {
+      throw new Error('No user logged in');
+    }
+    try {
+      set({ isLoading: true, error: null });
+      await resendVerificationEmail(user);
+      set({ isLoading: false });
+    } catch (error: any) {
+      set({ 
+        error: error.message || 'Failed to resend verification email', 
+        isLoading: false 
+      });
+      throw error;
+    }
   },
 
   clearError: () => {

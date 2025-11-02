@@ -7,8 +7,11 @@
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
+  signInWithPopup,
+  GoogleAuthProvider,
   signOut,
   sendPasswordResetEmail,
+  sendEmailVerification,
   updateProfile,
   User,
   onAuthStateChanged,
@@ -32,6 +35,8 @@ export const signUp = async (email: string, password: string, username: string):
     const user = userCredential.user;
 
     await updateProfile(user, { displayName: username });
+
+    await sendEmailVerification(user);
 
     const userProfile: UserProfile = {
       uid: user.uid,
@@ -86,6 +91,44 @@ export const getUserProfile = async (uid: string): Promise<UserProfile | null> =
     return null;
   } catch (error: any) {
     throw new Error(error.message || 'Failed to get user profile');
+  }
+};
+
+export const signInWithGoogle = async (): Promise<User> => {
+  try {
+    const provider = new GoogleAuthProvider();
+    const userCredential: UserCredential = await signInWithPopup(auth, provider);
+    const user = userCredential.user;
+
+    const userDocRef = doc(db, 'users', user.uid);
+    const userDoc = await getDoc(userDocRef);
+
+    if (!userDoc.exists()) {
+      const username = user.displayName || user.email?.split('@')[0] || 'Player';
+      
+      const userProfile: UserProfile = {
+        uid: user.uid,
+        username,
+        email: user.email || '',
+        createdAt: serverTimestamp(),
+        totalGames: 0,
+        highScore: 0
+      };
+
+      await setDoc(userDocRef, userProfile);
+    }
+
+    return user;
+  } catch (error: any) {
+    throw new Error(error.message || 'Failed to sign in with Google');
+  }
+};
+
+export const resendVerificationEmail = async (user: User): Promise<void> => {
+  try {
+    await sendEmailVerification(user);
+  } catch (error: any) {
+    throw new Error(error.message || 'Failed to send verification email');
   }
 };
 

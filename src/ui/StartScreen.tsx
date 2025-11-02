@@ -11,6 +11,7 @@ import { ShopScreen } from './ShopScreen';
 import { ProfileScreen } from './ProfileScreen';
 import { LevelSelectScreen } from './LevelSelectScreen';
 import { CountdownScreen } from './CountdownScreen';
+import { GameCanvas } from './GameCanvas';
 
 export const StartScreen = () => {
   const { userProfile, logout } = useAuthStore();
@@ -19,6 +20,7 @@ export const StartScreen = () => {
   const [showProfile, setShowProfile] = useState(false);
   const [showLevelSelect, setShowLevelSelect] = useState(false);
   const [showCountdown, setShowCountdown] = useState(false);
+  const [showGame, setShowGame] = useState(false);
   const [selectedDifficulty, setSelectedDifficulty] = useState<'EASY' | 'MEDIUM' | 'HARD'>('EASY');
 
   const handleLevelSelect = (difficulty: 'EASY' | 'MEDIUM' | 'HARD') => {
@@ -29,8 +31,15 @@ export const StartScreen = () => {
 
   const handleCountdownComplete = () => {
     setShowCountdown(false);
-    // TODO: Start actual game
-    console.log('Starting game with difficulty:', selectedDifficulty);
+    setShowGame(true);
+  };
+
+  const handleGameOver = () => {
+    setShowGame(false);
+  };
+
+  const handleBackFromGame = () => {
+    setShowGame(false);
   };
 
   return (
@@ -194,6 +203,15 @@ export const StartScreen = () => {
         <CountdownScreen 
           difficulty={selectedDifficulty}
           onCountdownComplete={handleCountdownComplete}
+        />
+      )}
+
+      {/* Game Screen */}
+      {showGame && (
+        <GameCanvas 
+          difficulty={selectedDifficulty}
+          onGameOver={handleGameOver}
+          onBack={handleBackFromGame}
         />
       )}
     </div>

@@ -15,7 +15,8 @@ export const LoginScreen = () => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { signUpUser, loginUser } = useAuthStore();
+  const [showVerificationNotice, setShowVerificationNotice] = useState(false);
+  const { signUpUser, loginUser, loginWithGoogle } = useAuthStore();
 
   const validateUsername = (username: string) => {
     if (!username) {
@@ -104,9 +105,22 @@ export const LoginScreen = () => {
     setIsLoading(true);
     try {
       await signUpUser(trimmedEmail, password, trimmedUsername);
-      toast.success(`Welcome, ${trimmedUsername}!`);
+      setShowVerificationNotice(true);
+      toast.success('Verification email sent! Check your inbox.');
     } catch (error: any) {
       toast.error(error.message || 'Signup failed');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    setIsLoading(true);
+    try {
+      await loginWithGoogle();
+      toast.success('Signed in with Google!');
+    } catch (error: any) {
+      toast.error(error.message || 'Google sign-in failed');
     } finally {
       setIsLoading(false);
     }
@@ -120,11 +134,6 @@ export const LoginScreen = () => {
     }
   };
 
-  const handleGoogleLogin = () => {
-    toast('Coming soon', {
-      duration: 2000,
-    });
-  };
 
   const handleSettings = () => {
     toast('Coming soon', {
@@ -217,6 +226,58 @@ export const LoginScreen = () => {
           
           {/* Content on wooden board */}
           <div className="relative px-14 py-16">
+            
+            {showVerificationNotice ? (
+              // EMAIL VERIFICATION NOTICE
+              <div className="space-y-6">
+                <div className="text-center mb-8">
+                  <h2 className="text-4xl font-black" style={{ 
+                    fontFamily: '"Fredoka One", "Lilita One", "Baloo 2", "Bubblegum Sans", Rounded, cursive, sans-serif',
+                    color: '#4A972C',
+                    WebkitTextStroke: '0.5px white',
+                    textShadow: '3px 3px 0px rgba(0,0,0,0.15)',
+                    letterSpacing: '1px',
+                    fontWeight: '900'
+                  }}>
+                    Check Your Email!
+                  </h2>
+                </div>
+
+                <div className="bg-white/90 rounded-xl p-6 shadow-lg">
+                  <p className="text-gray-800 text-center mb-4">
+                    We've sent a verification link to <strong>{email}</strong>
+                  </p>
+                  <p className="text-gray-600 text-sm text-center">
+                    Click the link in your email to verify your account, then come back and log in.
+                  </p>
+                </div>
+
+                <div className="flex items-center justify-center gap-4 mt-6">
+                  <div className="relative group">
+                    <button
+                      onClick={() => {
+                        setShowVerificationNotice(false);
+                        setMode('login');
+                        setEmail('');
+                        setPassword('');
+                        setUsername('');
+                        setConfirmPassword('');
+                      }}
+                      className="transform hover:scale-110 active:scale-95 transition-transform duration-200"
+                    >
+                      <img 
+                        src="/PNG/btn/ok.png" 
+                        alt="Got it" 
+                        className="w-16 h-16 drop-shadow-xl"
+                      />
+                    </button>
+                    <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap shadow-lg">
+                      Got it!
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : (
               <>
             {/* Logo at top inside box */}
             <div className="flex justify-center mb-8">
@@ -374,8 +435,9 @@ export const LoginScreen = () => {
               {/* Google Login Button - 01 with white box and G on top */}
               <div className="relative group">
                 <button
-                  onClick={handleGoogleLogin}
-                  className="relative transform hover:scale-110 active:scale-95 transition-transform duration-200"
+                  onClick={handleGoogleSignIn}
+                  disabled={isLoading}
+                  className="relative transform hover:scale-110 active:scale-95 transition-transform duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {/* 01.png background frame */}
                   <img 
@@ -424,6 +486,7 @@ export const LoginScreen = () => {
 
             </div>
               </>
+            )}
 
           </div>
         </div>

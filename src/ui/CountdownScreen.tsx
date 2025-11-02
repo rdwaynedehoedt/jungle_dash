@@ -27,7 +27,7 @@ export const CountdownScreen = ({ difficulty, onCountdownComplete }: CountdownSc
       { value: "GO", duration: 800 },
     ];
 
-    let timeoutIds: number[] = [];
+    let timeoutIds: ReturnType<typeof setTimeout>[] = [];
     let cumulativeDelay = 0;
 
     sequence.forEach((step, index) => {
@@ -50,7 +50,7 @@ export const CountdownScreen = ({ difficulty, onCountdownComplete }: CountdownSc
     });
 
     return () => {
-      timeoutIds.forEach((id) => clearTimeout(id as unknown as number));
+      timeoutIds.forEach((id) => clearTimeout(id));
     };
   }, [difficulty, onCountdownComplete]);
 

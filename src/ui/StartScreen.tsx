@@ -12,6 +12,7 @@ import { ProfileScreen } from './ProfileScreen';
 import { LevelSelectScreen } from './LevelSelectScreen';
 import { CountdownScreen } from './CountdownScreen';
 import { GameCanvas } from './GameCanvas';
+import { GameOverScreen } from './GameOverScreen';
 
 export const StartScreen = () => {
   const { userProfile, logout } = useAuthStore();
@@ -21,6 +22,8 @@ export const StartScreen = () => {
   const [showLevelSelect, setShowLevelSelect] = useState(false);
   const [showCountdown, setShowCountdown] = useState(false);
   const [showGame, setShowGame] = useState(false);
+  const [showGameOver, setShowGameOver] = useState(false);
+  const [finalScore, setFinalScore] = useState(0);
   const [selectedDifficulty, setSelectedDifficulty] = useState<'EASY' | 'MEDIUM' | 'HARD'>('EASY');
 
   const handleLevelSelect = (difficulty: 'EASY' | 'MEDIUM' | 'HARD') => {
@@ -34,12 +37,23 @@ export const StartScreen = () => {
     setShowGame(true);
   };
 
-  const handleGameOver = () => {
+  const handleGameOver = (score: number) => {
+    setFinalScore(score);
     setShowGame(false);
+    setShowGameOver(true);
   };
 
   const handleBackFromGame = () => {
     setShowGame(false);
+  };
+
+  const handleRestart = () => {
+    setShowGameOver(false);
+    setShowCountdown(true);
+  };
+
+  const handleMainMenu = () => {
+    setShowGameOver(false);
   };
 
   return (
@@ -212,6 +226,15 @@ export const StartScreen = () => {
           difficulty={selectedDifficulty}
           onGameOver={handleGameOver}
           onBack={handleBackFromGame}
+        />
+      )}
+
+      {/* Game Over Screen */}
+      {showGameOver && (
+        <GameOverScreen 
+          score={finalScore}
+          onRestart={handleRestart}
+          onMainMenu={handleMainMenu}
         />
       )}
     </div>

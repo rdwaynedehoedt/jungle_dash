@@ -10,7 +10,7 @@ import { ObstacleManager } from '../core/ObstacleManager';
 
 interface GameCanvasProps {
   difficulty: 'EASY' | 'MEDIUM' | 'HARD';
-  onGameOver: () => void;
+  onGameOver: (score: number) => void;
   onBack: () => void;
 }
 
@@ -21,6 +21,7 @@ export const GameCanvas = ({ difficulty, onGameOver, onBack }: GameCanvasProps) 
   const obstacleManagerRef = useRef<ObstacleManager | null>(null);
   const animationFrameRef = useRef<number>();
   const [score, setScore] = useState(0);
+  const scoreRef = useRef<number>(0);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -78,13 +79,14 @@ export const GameCanvas = ({ difficulty, onGameOver, onBack }: GameCanvasProps) 
       const player = playerRef.current?.getBounds();
       if (player && obstacleManagerRef.current?.checkCollision(player)) {
         gameRunning = false;
-        onGameOver();
+        onGameOver(scoreRef.current);
         return;
       }
 
       scoreAccumulator += deltaTime;
       if (scoreAccumulator >= 0.1) {
-        setScore(prev => prev + 1);
+        scoreRef.current += 1;
+        setScore(scoreRef.current);
         scoreAccumulator = 0;
       }
 

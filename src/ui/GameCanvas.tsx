@@ -12,16 +12,17 @@ interface GameCanvasProps {
   difficulty: 'EASY' | 'MEDIUM' | 'HARD';
   onGameOver: (score: number) => void;
   onBack: () => void;
+  initialScore?: number;  // Resume from this score (second chance)
 }
 
-export const GameCanvas = ({ difficulty, onGameOver, onBack }: GameCanvasProps) => {
+export const GameCanvas = ({ difficulty, onGameOver, onBack, initialScore = 0 }: GameCanvasProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const playerRef = useRef<Player | null>(null);
   const obstacleManagerRef = useRef<ObstacleManager | null>(null);
   const animationFrameRef = useRef<number>();
-  const [score, setScore] = useState(0);
-  const scoreRef = useRef<number>(0);
+  const [score, setScore] = useState(initialScore);
+  const scoreRef = useRef<number>(initialScore);
 
   useEffect(() => {
     const canvas = canvasRef.current;

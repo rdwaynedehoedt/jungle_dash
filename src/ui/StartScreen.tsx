@@ -24,6 +24,7 @@ export const StartScreen = () => {
   const [showGame, setShowGame] = useState(false);
   const [showGameOver, setShowGameOver] = useState(false);
   const [finalScore, setFinalScore] = useState(0);
+  const [resumeScore, setResumeScore] = useState(0);  // For second chance
   const [selectedDifficulty, setSelectedDifficulty] = useState<'EASY' | 'MEDIUM' | 'HARD'>('EASY');
 
   const handleLevelSelect = (difficulty: 'EASY' | 'MEDIUM' | 'HARD') => {
@@ -34,6 +35,7 @@ export const StartScreen = () => {
 
   const handleCountdownComplete = () => {
     setShowCountdown(false);
+    setResumeScore(0);  // Reset resume score for new game
     setShowGame(true);
   };
 
@@ -54,6 +56,13 @@ export const StartScreen = () => {
 
   const handleMainMenu = () => {
     setShowGameOver(false);
+  };
+
+  const handleSecondChance = () => {
+    // Resume game from where it ended - keep the final score
+    setResumeScore(finalScore);
+    setShowGameOver(false);
+    setShowGame(true);
   };
 
   return (
@@ -226,6 +235,7 @@ export const StartScreen = () => {
           difficulty={selectedDifficulty}
           onGameOver={handleGameOver}
           onBack={handleBackFromGame}
+          initialScore={resumeScore}
         />
       )}
 
@@ -235,6 +245,7 @@ export const StartScreen = () => {
           score={finalScore}
           onRestart={handleRestart}
           onMainMenu={handleMainMenu}
+          onSecondChance={handleSecondChance}
         />
       )}
     </div>

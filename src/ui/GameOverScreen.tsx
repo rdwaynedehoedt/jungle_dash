@@ -1,19 +1,26 @@
 /**
  * SOURCE: Custom implementation
  * PURPOSE: Game Over screen when player loses
- * MODIFICATIONS: Wooden box aesthetic matching Shop/Settings screens EXACTLY
+ * MODIFICATIONS: Wooden box aesthetic with second chance feature
  */
 
 import { useState, useEffect } from 'react';
+import { fetchHeartQuestion, HeartQuestion } from '../services/heartApi';
+import { TriviaModal } from './TriviaModal';
 
 interface GameOverScreenProps {
   score: number;
   onRestart: () => void;
   onMainMenu: () => void;
+  onSecondChance?: () => void;  // Resume game from same score
 }
 
-export const GameOverScreen = ({ score, onRestart, onMainMenu }: GameOverScreenProps) => {
+export const GameOverScreen = ({ score, onRestart, onMainMenu, onSecondChance }: GameOverScreenProps) => {
   const [isAnimating, setIsAnimating] = useState(false);
+  const [showTrivia, setShowTrivia] = useState(false);
+  const [triviaQuestion, setTriviaQuestion] = useState<HeartQuestion | null>(null);
+  const [isLoadingQuestion, setIsLoadingQuestion] = useState(false);
+  const [hasUsedSecondChance, setHasUsedSecondChance] = useState(false);
 
   useEffect(() => {
     // Trigger open animation
@@ -34,6 +41,38 @@ export const GameOverScreen = ({ score, onRestart, onMainMenu }: GameOverScreenP
     setTimeout(() => {
       onMainMenu();
     }, 300);
+  };
+
+  const handleSecondChance = async () => {
+    setIsLoadingQuestion(true);
+    try {
+      const question = await fetchHeartQuestion();
+      setTriviaQuestion(question);
+      setShowTrivia(true);
+    } catch (error) {
+      console.error('Failed to load question:', error);
+      alert('Failed to load question. Please try again.');
+    } finally {
+      setIsLoadingQuestion(false);
+    }
+  };
+
+  const handleTriviaCorrect = () => {
+    setShowTrivia(false);
+    setHasUsedSecondChance(true);
+    if (onSecondChance) {
+      onSecondChance();
+    }
+  };
+
+  const handleTriviaWrong = () => {
+    setShowTrivia(false);
+    setHasUsedSecondChance(true);
+    alert('Wrong answer! Game Over.');
+  };
+
+  const handleTriviaClose = () => {
+    setShowTrivia(false);
   };
 
   return (
@@ -147,7 +186,29 @@ export const GameOverScreen = ({ score, onRestart, onMainMenu }: GameOverScreenP
             </div>
 
             {/* Buttons */}
-            <div className="flex items-center justify-center gap-6">
+            <div className="flex items-center justify-center gap-4">
+              {/* Second Chance Button - Only show if not used yet */}
+              {!hasUsedSecondChance && onSecondChance && (
+                <button
+                  onClick={handleSecondChance}
+                  disabled={isLoadingQuestion}
+                  className="transform hover:scale-110 active:scale-95 transition-transform duration-200 disabled:opacity-50"
+                  title="Second Chance"
+                >
+                  <div className="bg-yellow-500 hover:bg-yellow-600 rounded-xl p-4 shadow-xl border-4 border-yellow-700">
+                    <span 
+                      className="text-xl font-black text-white whitespace-nowrap"
+                      style={{
+                        fontFamily: '"Fredoka One", "Lilita One", cursive',
+                        textShadow: '2px 2px 0px rgba(0,0,0,0.5)'
+                      }}
+                    >
+                      {isLoadingQuestion ? '⏳' : '🎯 2nd Chance'}
+                    </span>
+                  </div>
+                </button>
+              )}
+
               <button
                 onClick={handleRestart}
                 className="transform hover:scale-110 active:scale-95 transition-transform duration-200"
@@ -174,6 +235,17 @@ export const GameOverScreen = ({ score, onRestart, onMainMenu }: GameOverScreenP
           </div>
         </div>
       </div>
+
+      {/* Trivia Modal */}
+      {showTrivia && triviaQuestion && (
+        <TriviaModal
+          imageUrl={triviaQuestion.question}
+          correctAnswer={triviaQuestion.solution}
+          onCorrect={handleTriviaCorrect}
+          onWrong={handleTriviaWrong}
+          onClose={handleTriviaClose}
+        />
+      )}
     </div>
   );
 };

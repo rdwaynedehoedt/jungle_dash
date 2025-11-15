@@ -6,19 +6,18 @@
 
 import { useState } from 'react';
 import { useAuthStore } from '../state/useAuthStore';
+import { useLeaderboardStore } from '../state/useLeaderboardStore';
 import { SettingsScreen } from './SettingsScreen';
-import { ShopScreen } from './ShopScreen';
-import { ProfileScreen } from './ProfileScreen';
 import { LevelSelectScreen } from './LevelSelectScreen';
 import { CountdownScreen } from './CountdownScreen';
 import { GameCanvas } from './GameCanvas';
 import { GameOverScreen } from './GameOverScreen';
+import { LeaderboardModal } from './LeaderboardModal';
 
 export const StartScreen = () => {
   const { userProfile, logout } = useAuthStore();
+  const { isOpen: showLeaderboard, openLeaderboard } = useLeaderboardStore();
   const [showSettings, setShowSettings] = useState(false);
-  const [showShop, setShowShop] = useState(false);
-  const [showProfile, setShowProfile] = useState(false);
   const [showLevelSelect, setShowLevelSelect] = useState(false);
   const [showCountdown, setShowCountdown] = useState(false);
   const [showGame, setShowGame] = useState(false);
@@ -133,20 +132,18 @@ export const StartScreen = () => {
         {/* Bottom Section - Navigation Icons */}
         <div className="flex items-center justify-center gap-6 mb-8">
           
-          {/* Shop */}
+          {/* Leaderboard Trophy Button */}
           <div className="relative group">
             <button 
-              onClick={() => setShowShop(true)}
+              onClick={openLeaderboard}
               className="transform hover:scale-110 active:scale-95 transition-transform duration-200"
             >
-              <img 
-                src="/PNG/btn/shop.png" 
-                alt="Shop" 
-                className="w-16 h-16 drop-shadow-xl"
-              />
+              <div className="w-16 h-16 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center border-4 border-white shadow-xl">
+                <span className="text-3xl">🏆</span>
+              </div>
             </button>
             <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap shadow-lg">
-              Shop
+              Leaderboard
             </div>
           </div>
 
@@ -164,23 +161,6 @@ export const StartScreen = () => {
             </button>
             <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap shadow-lg">
               Settings
-            </div>
-          </div>
-
-          {/* Profile */}
-          <div className="relative group">
-            <button 
-              onClick={() => setShowProfile(true)}
-              className="transform hover:scale-110 active:scale-95 transition-transform duration-200"
-            >
-              <img 
-                src="/PNG/btn/leader.png" 
-                alt="Profile" 
-                className="w-16 h-16 drop-shadow-xl"
-              />
-            </button>
-            <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap shadow-lg">
-              My Profile
             </div>
           </div>
 
@@ -206,12 +186,6 @@ export const StartScreen = () => {
 
       {/* Settings Modal */}
       {showSettings && <SettingsScreen onClose={() => setShowSettings(false)} />}
-      
-      {/* Shop Modal */}
-      {showShop && <ShopScreen onClose={() => setShowShop(false)} />}
-      
-      {/* Profile Modal */}
-      {showProfile && <ProfileScreen onClose={() => setShowProfile(false)} />}
       
       {/* Level Select Modal */}
       {showLevelSelect && (
@@ -248,6 +222,9 @@ export const StartScreen = () => {
           onSecondChance={handleSecondChance}
         />
       )}
+
+      {/* Leaderboard Modal */}
+      {showLeaderboard && <LeaderboardModal />}
     </div>
   );
 };

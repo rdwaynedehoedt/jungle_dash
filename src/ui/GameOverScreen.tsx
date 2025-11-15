@@ -1,12 +1,16 @@
 /**
  * SOURCE: Custom implementation
  * PURPOSE: Game Over screen when player loses
- * MODIFICATIONS: Wooden box aesthetic with second chance feature
+ * MODIFICATIONS: Wooden box aesthetic with second chance feature + motivational quotes
+ * INTEROPERABILITY: Integrates with Quotable API for motivational quotes
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { fetchHeartQuestion, HeartQuestion } from '../services/heartApi';
+import { fetchMotivationalQuote, Quote } from '../services/quotesApi';
 import { TriviaModal } from './TriviaModal';
+import { useAuthStore } from '../state/useAuthStore';
+import { useLeaderboardStore } from '../state/useLeaderboardStore';
 
 interface GameOverScreenProps {
   score: number;
@@ -16,16 +20,46 @@ interface GameOverScreenProps {
 }
 
 export const GameOverScreen = ({ score, onRestart, onMainMenu, onSecondChance }: GameOverScreenProps) => {
+  const { userProfile } = useAuthStore();
+  const { submitScore } = useLeaderboardStore();
   const [isAnimating, setIsAnimating] = useState(false);
   const [showTrivia, setShowTrivia] = useState(false);
   const [triviaQuestion, setTriviaQuestion] = useState<HeartQuestion | null>(null);
   const [isLoadingQuestion, setIsLoadingQuestion] = useState(false);
   const [hasUsedSecondChance, setHasUsedSecondChance] = useState(false);
+  const hasSubmittedScore = useRef(false); // Track if score was already submitted
+  
+  // STATE: Motivational quote (demonstrates LOW COUPLING - UI state separate from service)
+  const [motivationalQuote, setMotivationalQuote] = useState<Quote | null>(null);
+  const [isLoadingQuote, setIsLoadingQuote] = useState(true);
 
   useEffect(() => {
     // Trigger open animation
     setIsAnimating(true);
-  }, []);
+
+    // Auto-save score to leaderboard (only once, even in React StrictMode)
+    if (userProfile?.username && score > 0 && !hasSubmittedScore.current) {
+      hasSubmittedScore.current = true;
+      submitScore(userProfile.username, score);
+    }
+
+    // INTEROPERABILITY: Fetch motivational quote from external API
+    // This demonstrates integration with third-party services
+    const loadQuote = async () => {
+      try {
+        const quote = await fetchMotivationalQuote();
+        setMotivationalQuote(quote);
+      } catch (error) {
+        console.error('Failed to load quote:', error);
+        // Fallback is handled in the service layer (HIGH COHESION)
+      } finally {
+        setIsLoadingQuote(false);
+      }
+    };
+
+    loadQuote();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Empty deps - only run once on mount
 
   const handleRestart = () => {
     // Trigger close animation
@@ -182,6 +216,44 @@ export const GameOverScreen = ({ score, onRestart, onMainMenu, onSecondChance }:
                 >
                   Better luck next time!
                 </p>
+              </div>
+            </div>
+
+            {/* Motivational Quote Section - INTEROPERABILITY SHOWCASE */}
+            <div className="mb-6 px-4">
+              <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl p-6 shadow-lg border-2 border-amber-200">
+                {isLoadingQuote ? (
+                  // Loading state
+                  <div className="flex items-center justify-center gap-2">
+                    <div className="animate-spin rounded-full h-5 w-5 border-2 border-amber-600 border-t-transparent" />
+                    <p className="text-amber-700 font-semibold text-sm">
+                      Loading inspiration...
+                    </p>
+                  </div>
+                ) : motivationalQuote ? (
+                  // Quote display
+                  <div className="space-y-3">
+                    <div className="flex items-start gap-2">
+                      <span className="text-3xl text-amber-600 leading-none mt-1">💡</span>
+                      <p 
+                        className="text-base font-semibold text-gray-800 italic leading-relaxed flex-1"
+                        style={{ fontFamily: '"Fredoka One", "Lilita One", cursive' }}
+                      >
+                        "{motivationalQuote.content}"
+                      </p>
+                    </div>
+                    <p 
+                      className="text-sm font-bold text-amber-700 text-right"
+                      style={{ fontFamily: '"Fredoka One", "Lilita One", cursive' }}
+                    >
+                      — {motivationalQuote.author}
+                    </p>
+                    {/* API Attribution */}
+                    <p className="text-xs text-gray-500 text-center pt-2 border-t border-amber-200">
+                      Powered by Quotable API
+                    </p>
+                  </div>
+                ) : null}
               </div>
             </div>
 

@@ -54,4 +54,18 @@ export interface Bounds {
   height: number;
 }
 
+export interface LeaderboardEntry {
+  id?: string;
+  username: string;
+  score: number;
+  timestamp: Date;
+}
+
+export interface LeaderboardState {
+  entries: LeaderboardEntry[];
+  isLoading: boolean;
+  error: string | null;
+  isOpen: boolean;
+}
+
 

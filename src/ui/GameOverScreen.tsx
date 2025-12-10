@@ -248,10 +248,6 @@ export const GameOverScreen = ({ score, onRestart, onMainMenu, onSecondChance }:
                     >
                       — {motivationalQuote.author}
                     </p>
-                    {/* API Attribution */}
-                    <p className="text-xs text-gray-500 text-center pt-2 border-t border-amber-200">
-                      Powered by Quotable API
-                    </p>
                   </div>
                 ) : null}
               </div>
